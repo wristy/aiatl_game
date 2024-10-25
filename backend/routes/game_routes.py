@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.game_service import play_game
+from backend.services.game_service import play_game
 
 game_bp = Blueprint('game_bp', __name__)
 

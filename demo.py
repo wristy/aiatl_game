@@ -71,4 +71,5 @@ if __name__ == "__main__":
     response = send_message(user_message, [calculator_tool])
     tool_inputs = response.content[0].input
     print(calculate(tool_inputs["operation"], tool_inputs["x"], tool_inputs["y"]))
+
     
