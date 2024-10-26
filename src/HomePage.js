@@ -3,9 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Select, Box, MenuItem, Typography, CircularProgress, TextField, Button } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import './App.css';
+import axios from 'axios';
 // import { Box } from "@mui/material/Box";
 
 function HomePage() {
+    const [agent1, setAgent1] = useState('Sonnet');
+    const [agent2, setAgent2] = useState('Sonnet'); 
+    const [rounds, setRounds] = useState(50);
+
     const options = [
         { value: "Sonnet", label: "Sonnet" },
         { value: "Haiku", label: "Haiku" },
@@ -15,7 +20,6 @@ function HomePage() {
     const [text, setText] = useState('');
     const [loading, setLoading] = useState(true);
 
-    const [rounds, setRounds] = useState('5');
     const [error, setError] = useState(false);
 
     const navigate = useNavigate();
@@ -40,7 +44,15 @@ function HomePage() {
         fetchText();
     }, []);
 
-    const handleChange = (event) => {
+    const handleAgent1Change = (event) => {
+        setAgent1(event.target.value);
+    };    
+
+    const handleAgent2Change = (event) => {
+        setAgent2(event.target.value);
+    };
+
+    const handleRoundChange = (event) => {
         const inputValue = event.target.value;
         
         // Check if the input is an integer
@@ -52,8 +64,24 @@ function HomePage() {
         }
       };
 
-    const onAgentChange = (value) => {
-        console.log(value);
+    // const onAgentChange = (value) => {
+    //     console.log(value);
+    // };
+
+    const onPlay = () => {
+        const data = {
+            agent1: agent1,
+            agent2: agent2,
+            rounds: rounds,
+        };
+
+        axios.post(``, data)
+            .then(response => {
+                console.log('Data submitted successfully:', response.data);
+            })
+            .catch(error => {
+                console.error('Error submitting data:', error);
+            });
     };
 
     return (
@@ -70,8 +98,8 @@ function HomePage() {
                 mx: '10%',
             }}>
                 <Select 
-                    defaultValue="Sonnet" 
-                    onChange={onAgentChange} 
+                    defaultValue={agent1}
+                    onChange={handleAgent1Change} 
                     displayEmpty
                     sx = {{color: 'white',
                            backgroundColor: '#2b2340',
@@ -98,7 +126,7 @@ function HomePage() {
                 > */}
                     <TextField
                     value={rounds}
-                    onChange={handleChange}
+                    onChange={handleRoundChange}
                     id="standard-number"
                     label="Number of rounds"
                     type="number"
@@ -138,12 +166,12 @@ function HomePage() {
                 <Box
                     sx={{display: 'flex',
                         flex: '1',
-                    flexDirection: 'row',
+                        flexDirection: 'row',
                     }}
                 ></Box>
                 <Select 
-                    defaultValue="Sonnet" 
-                    onChange={onAgentChange} 
+                    defaultValue={agent2} 
+                    onChange={handleAgent2Change} 
                     displayEmpty
                     sx = {{color: 'white',
                            backgroundColor: '#2b2340'
