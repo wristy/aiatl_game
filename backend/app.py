@@ -30,13 +30,14 @@ if __name__ == "__main__":
         client=client,
         tools=prisoners_dilemma_tools,
         default_tool=prisoners_dilemma_tools[0],
+        rules="",
     )
 
     random_agent = RandomAgent(agent_id="Random", actions=["cooperate", "defect"])
 
     game = PrisonersDilemmaGame(
-        ai_agent,
-        random_agent,
-        rounds=4,
+        player1=ai_agent,
+        player2=random_agent,
+        rounds=50,
     )
     game.play()
