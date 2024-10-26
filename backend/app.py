@@ -40,4 +40,5 @@ if __name__ == "__main__":
         player2=random_agent,
         rounds=50,
     )
+    
     game.play()
