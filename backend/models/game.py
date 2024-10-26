@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import List, Tuple, Dict, Any
+from .agents import AIAgent, Agent, RandomAgent
 
 
 class GameState:
@@ -36,6 +37,7 @@ class Game(ABC):
         model: str,
         client: Any,
         rounds: int = 10,
+        system_prompt: str = "You are an AI Languange Model",
     ) -> None:
         self.player1_id = player1_id
         self.player2_id = player2_id
@@ -44,6 +46,7 @@ class Game(ABC):
         self.client = client
         self.rounds = rounds
         self.game_state = GameState()
+        self.system_prompt = system_prompt
 
     @abstractmethod
     def determine_outcome(self, action1: str, action2: str) -> Tuple[str, int, int]:
@@ -58,6 +61,7 @@ class Game(ABC):
             {
                 "role": "user",
                 "content": f"""
+
             You are {player_id} participating in the game.
             Here is the history of previous rounds:
 
@@ -69,12 +73,12 @@ class Game(ABC):
         ]
 
         system_prompt = f"""
-        Today's date is {date.today().strftime("%B %d, %Y")}.
+                
         """
 
         print(f"{player_id}: ")
         response = self.client.messages.create(
-            system=system_prompt,
+            system=self.system_prompt,
             model=self.model,
             messages=messages,
             max_tokens=100,

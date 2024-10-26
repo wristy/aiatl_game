@@ -14,5 +14,4 @@ def play():
 def send():
     response = []
     # parse json
-    result = play_game(data)
-    return jsonify(result)
+    return jsonify(response)
