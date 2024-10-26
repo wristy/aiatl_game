@@ -47,7 +47,7 @@ class AIAgent(Agent):
 
     def choose_action(self, current_state: str) -> str:
 
-        messages = [{"role": "user", "content": current_state}]
+        messages = [{"role": "user", "content": str(current_state)}]
 
         print(f"messages: {messages}")
 
@@ -95,6 +95,19 @@ class RandomAgent(Agent):
     def choose_action(self, current_state: str) -> str:
         action: str = random.choice(self.actions)
         return action
+    
+class HumanAgent(Agent):
+    """
+    Human agent that allows user to input action.
+    """
+
+    def __init__(self, agent_id: str, actions: List[str]):
+        super().__init__(agent_id)
+        self.actions = actions
+
+    def choose_action(self, current_state: str) -> str:
+        action: str = input(f"{self.agent_id}, enter your action (number): ")
+        return self.actions[int(action)]
 
 
 class TitForTatAgent(Agent):
@@ -108,9 +121,27 @@ class TitForTatAgent(Agent):
     def choose_action(self, current_state: Dict[str, Any]) -> str:
         if current_state["round_number"] == 1:
             return "cooperate"
-        partner_last_choice = current_state.get("partner_last_choice")
+        partner_last_choice = current_state["history"]["player1"][-1]
         if partner_last_choice:
             return partner_last_choice
         else:
+            print(f"{self.agent_id} has no history, defaulting to cooperate")
             return "cooperate"  # Default to cooperate if no history
+        
+class SuspiciousTitForTatAgent(TitForTatAgent):
+    """
+    Starts by defecting and then mimics the partner's last action.
+    """
 
+    def choose_action(self, current_state: Dict[str, Any]) -> str:
+        if current_state["round_number"] == 1:
+            return "defect"
+        return super().choose_action(current_state)
+    
+class AlwaysDefectAgent(Agent):
+    """
+    Always defects.
+    """
+
+    def choose_action(self, current_state: Dict[str, Any]) -> str:
+        return "defect"

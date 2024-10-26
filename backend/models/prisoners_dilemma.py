@@ -13,16 +13,14 @@ class PrisonersDilemmaGame(Game):
         player2: Agent,
         rounds: int = 10,
     ):
-        rules = """You are a prisoner awating sentencing with your partner. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
-
-                Below is the state information provided to you at each round:
+        rules = f"""You are {player1.agent_id} (Player 1) awating sentencing with your partner {player2.agent_id}. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
 
                 - `round_number`: The current round of the game. If this is a single-round game, `round_number` is set to 1. In an iterated game, this increments with each new round.
                 - `reward_matrix`: This shows the points outcomes for different choice combinations:
-                    - `both_cooperate`: Points if you and the partner both cooperate.
-                    - `both_defect`: Points if you and the partner both defect.
-                    - `defect_cooperate`: Points if you defect and the partner cooperates.
-                    - `cooperate_defect`: Points if you cooperate and the partner defects.
+                    - `both_cooperate`: Points if you and the partner both cooperate. 3 for you, 3 for your partner.
+                    - `both_defect`: Points if you and the partner both defect. 1 for you, 1 for your partner.
+                    - `defect_cooperate`: Points if you defect and the partner cooperates. 0 for you, 5 for your partner.
+                    - `cooperate_defect`: Points if you cooperate and the partner defects. 5 for you, 0 for your partner.
                 - `history`: A list of all the states from the previous rounds.
 
                 Objective: Aim to maximize your own total points by carefully choosing to either "cooperate" or "defect" in each round, using the information provided. Consider the potential behaviors of your partner and how your own actions influence both immediate and future outcomes. You cannot change your decision after it's made, and you will not know the partner's choice until you commit.
@@ -31,14 +29,7 @@ class PrisonersDilemmaGame(Game):
 
         start_state = {
             "round_number": 1,
-            "reward_matrix": {
-                "both_cooperate": 3,  # 3 points if both cooperate
-                "both_defect": 1,  # 1 point if both defect
-                "defect_cooperate": 0,  # 0 points if AI defects and partner cooperates
-                "cooperate_defect": 5,  # 5 points if AI cooperates and partner defects
-            },
-            "my_total_points": 0,  # Starting with no points
-            "partner_total_points": 0,  # Starting with no points for partner
+            "history": {"player1": [], "player2": []},
         }
         super().__init__(rules, start_state, player1, player2, rounds)
 
@@ -64,19 +55,20 @@ class PrisonersDilemmaGame(Game):
         self.player1.score += score1
         self.player2.score += score2
 
+        self.game_state.current_state["round_number"] += 1
+
+        current_history = self.game_state.get_history()
+        print(current_history)
+
+        current_history["player1"].append(action1)
+        current_history["player2"].append(action2)
+
         # save to csv file
         self.write_csv(score1, score2)
 
         current_state = {
-            "round_number": self.game_state.current_state["round_number"] + 1,
-            "reward_matrix": {
-                "both_cooperate": 3,  # 3 points if both cooperate
-                "both_defect": 1,  # 1 point if both defect
-                "defect_cooperate": 0,  # 0 points if AI defects and partner cooperates
-                "cooperate_defect": 5,  # 5 points if AI cooperates and partner defects
-            },
-            "my_total_points": self.player1.score,
-            "partner_total_points": self.player2.score,
+            "round_number": self.game_state.current_state["round_number"],
+            "history": current_history,
         }
         return current_state
 

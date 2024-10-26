@@ -3,20 +3,16 @@ from datetime import date
 from typing import List, Tuple, Dict, Any
 from .agents import AIAgent, Agent, RandomAgent
 
-
-
-
 class GameState:
     def __init__(self, current_state: Dict[str, Any]) -> None:
-        self.history: List[Dict[str, Any]] = [current_state]
+        self.history: Dict[str, List[str]] = {"player1": [], "player2": []}
         self.current_state: Dict[str, Any] = current_state
 
     def record_game(self, new_state) -> None:
-        self.history.append(new_state)
         self.current_state = new_state
 
-    def get_history(self) -> str:
-        return str(self.history)
+    def get_history(self) -> Dict[str, List[str]]:
+        return self.history
 
 class Game(ABC):
     def __init__(
@@ -99,8 +95,8 @@ class Game(ABC):
             # history = self.game_state.get_history()
 
             # Get actions from both players
-            action1 = self.player1.choose_action(self.game_state.get_history())
-            action2 = self.player2.choose_action(self.game_state.get_history())
+            action1 = self.player1.choose_action(self.game_state.current_state)
+            action2 = self.player2.choose_action(self.game_state.current_state)
 
             print(f"{self.player1.agent_id} chooses to {action1}.")
             print(f"{self.player2.agent_id} chooses to {action2}.")
@@ -108,6 +104,7 @@ class Game(ABC):
             # Determine outcome
             new_state = self.determine_outcome(action1, action2)
             print(f"Outcome: {new_state}")
+
 
             # Record the game
             self.game_state.record_game(new_state)

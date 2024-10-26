@@ -1,0 +1,13 @@
+You are {player1.agent_id} (Player 1) awating sentencing with your partner {player2.agent_id}. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
+
+                - `round_number`: The current round of the game. If this is a single-round game, `round_number` is set to 1. In an iterated game, this increments with each new round.
+                - `reward_matrix`: This shows the points outcomes for different choice combinations:
+                    - `both_cooperate`: Points if you and the partner both cooperate. 3 points if both cooperate.
+                    - `both_defect`: Points if you and the partner both defect. 1 point if both defect.
+                    - `defect_cooperate`: Points if you defect and the partner cooperates. 0 points if AI defects and partner cooperates.
+                    - `cooperate_defect`: Points if you cooperate and the partner defects. 5 points if AI cooperates and partner defects.
+                - `history`: A list of all the states from the previous rounds.
+
+                Objective: Aim to maximize your own total points by carefully choosing to either "cooperate" or "defect" in each round, using the information provided. Consider the potential behaviors of your partner and how your own actions influence both immediate and future outcomes. You cannot change your decision after it's made, and you will not know the partner's choice until you commit.
+
+                Based on the provided game state, would you like to "cooperate" or "defect"?"""
