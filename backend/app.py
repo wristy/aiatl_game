@@ -16,8 +16,17 @@ client = anthropic.Client(api_key=API_KEY)
 # app.register_blueprint(game_bp, url_prefix='/api/games')
 # app.register_blueprint(agent_bp, url_prefix='/api/agents')
 
-if __name__ == '__main__':
-    # app.run(debug=True)
-    game = PrisonersDilemmaGame("player1", "player2", prisoners_dilemma_tools, "claude-3-haiku-20240307", client, rounds=2)
-    game.play()
+models = {"haiku": "claude-3-haiku-20240307", "sonnet": "claude-3-5-sonnet-latest"}
 
+
+if __name__ == "__main__":
+    # app.run(debug=True)
+    game = PrisonersDilemmaGame(
+        "player1",
+        "player2",
+        prisoners_dilemma_tools,
+        models["sonnet"],
+        client,
+        rounds=4,
+    )
+    game.play()
