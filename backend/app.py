@@ -1,18 +1,20 @@
 from flask import Flask
 from flask_cors import CORS
-from models.prisoners_dilemma import PrisonersDilemmaGame, prisoners_dilemma_tools
+from models.prisoners_dilemma import PrisonersDilemmaGame, prisoners_dilemma_tools, gemini_prisoners_dilemma_tools
 from routes.game_routes import game_bp
 from routes.agent_routes import agent_bp
 import anthropic
 import os
-from models.agents import AIAgent, RandomAgent, TitForTatAgent, SuspiciousTitForTatAgent, AlwaysDefectAgent
-
+from models.agents import AIAgent, RandomAgent, TitForTatAgent, SuspiciousTitForTatAgent, AlwaysDefectAgent, GeminiAgent
+import google.generativeai as genai
 
 app = Flask(__name__)
 CORS(app)
 
 API_KEY = os.getenv("ANTHROPIC_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 client = anthropic.Client(api_key=API_KEY)
+genai.configure(api_key=GEMINI_API_KEY)
 
 # Register Blueprints
 # app.register_blueprint(game_bp, url_prefix='/api/games')
@@ -20,9 +22,7 @@ client = anthropic.Client(api_key=API_KEY)
 
 models = {"haiku": "claude-3-haiku-20240307", "sonnet": "claude-3-5-sonnet-latest"}
 
-
 if __name__ == "__main__":
-    # app.run(debug=True)
 
     ai_agent = AIAgent(
         agent_id="LLM",
@@ -34,16 +34,17 @@ if __name__ == "__main__":
     )
 
     random_agent = RandomAgent(agent_id="Random", actions=["cooperate", "defect"])
-
     tit_for_tat_agent = TitForTatAgent(agent_id="Tit For Tat")
-
     suspicious_tit_for_tat_agent = SuspiciousTitForTatAgent(agent_id="Suspicious Tit For Tat")
+    always_defect_agent = AlwaysDefectAgent(agent_id="Always Defect")\
+    
+    
+    gemini_agent = GeminiAgent(agent_id="Gemini", model="gemini-1.5-flash", tools=gemini_prisoners_dilemma_tools, default_tool=gemini_prisoners_dilemma_tools[0], rules="")
 
-    always_defect_agent = AlwaysDefectAgent(agent_id="Always Defect")
 
     game = PrisonersDilemmaGame(
-        player1=ai_agent,
-        player2=always_defect_agent,
+        player1=gemini_agent,
+        player2=random_agent,
         rounds=50,
     )
 

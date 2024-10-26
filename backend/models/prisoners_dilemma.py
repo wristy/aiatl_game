@@ -1,6 +1,6 @@
 # prisoner_dilemma_game.py
 
-from typing import Tuple, List, Dict, Any
+from typing import Callable, Tuple, List, Dict, Any
 from .game import Game
 from .agents import Agent
 import glob
@@ -111,3 +111,4 @@ defect_tool: Dict[str, Any] = {
 }
 
 prisoners_dilemma_tools: List[Dict[str, Any]] = [cooperate_tool, defect_tool]
+gemini_prisoners_dilemma_tools: List[Callable[[], None]] = [cooperate, defect]
