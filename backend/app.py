@@ -9,6 +9,7 @@ from models.agents import AIAgent, RandomAgent, TitForTatAgent, SuspiciousTitFor
 import google.generativeai as genai
 
 app = Flask(__name__)
+app.register_blueprint(game_bp)
 CORS(app)
 
 API_KEY = os.getenv("ANTHROPIC_API_KEY")
@@ -23,28 +24,23 @@ genai.configure(api_key=GEMINI_API_KEY)
 models = {"haiku": "claude-3-haiku-20240307", "sonnet": "claude-3-5-sonnet-latest"}
 
 if __name__ == "__main__":
+    app.run(debug=True)
 
-    ai_agent = AIAgent(
-        agent_id="LLM",
-        model=models["haiku"],
-        client=client,
-        tools=prisoners_dilemma_tools,
-        default_tool=prisoners_dilemma_tools[0],
-        rules="",
-    )
+    # ai_agent = AIAgent(
+    #     agent_id="LLM",
+    #     model=models["haiku"],
+    #     client=client,
+    #     tools=prisoners_dilemma_tools,
+    #     default_tool=prisoners_dilemma_tools[0],
+    #     rules="",
+    # )
 
-    random_agent = RandomAgent(agent_id="Random", actions=["cooperate", "defect"])
-    tit_for_tat_agent = TitForTatAgent(agent_id="Tit For Tat")
-    suspicious_tit_for_tat_agent = SuspiciousTitForTatAgent(agent_id="Suspicious Tit For Tat")
-    always_defect_agent = AlwaysDefectAgent(agent_id="Always Defect")\
+    # random_agent = RandomAgent(agent_id="Random", actions=["cooperate", "defect"])
+
+    # game = PrisonersDilemmaGame(
+    #     player1=ai_agent,
+    #     player2=random_agent,
+    #     rounds=50,
+    # )
     
-    
-    # gemini_agent = GeminiAgent(agent_id="Gemini", model="gemini-1.5-flash", tools=gemini_prisoners_dilemma_tools, default_tool=gemini_prisoners_dilemma_tools[0], rules="")
-
-
-    game = PrisonersDilemmaGame(
-        player1=ai_agent,
-        player2=random_agent,
-        rounds=50,
-    )
-    game.play()
+    # game.play()
