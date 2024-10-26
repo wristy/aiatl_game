@@ -13,6 +13,7 @@ class Agent(ABC):
 
     def __init__(self, agent_id: str):
         self.agent_id: str = agent_id
+        self.score: int = 0
 
     @abstractmethod
     def choose_action(self, current_state: str) -> str:
@@ -45,12 +46,10 @@ class AIAgent(Agent):
         self.rules = rules
 
     def choose_action(self, current_state: str) -> str:
-        messages: List[Dict[str, str]] = [
-            {
-                "role": "user",
-                "content": current_state,
-            }
-        ]
+
+        messages = [{"role": "user", "content": current_state}]
+
+        print(f"messages: {messages}")
 
         try:
             response = self.client.messages.create(
@@ -69,21 +68,20 @@ class AIAgent(Agent):
                 if self.is_valid_action(action):
                     return action
                 else:
-                    return self.default_action()
+                    return self.default_action()["name"]
             elif last_content_block.type == "tool_use":
                 return last_content_block.name
             else:
-                return self.default_action()
+                return self.default_action()["name"]
         except Exception as e:
             print(f"Error in AI Agent '{self.agent_id}': {e}")
-            return self.default_action()
+            return self.default_action()["name"]
 
     def is_valid_action(self, action: str) -> bool:
         return action in [tool["name"] for tool in self.tools]
 
-    def default_action(self) -> str:
+    def default_action(self) -> Dict[str, Any]:
         return self.default_tool
-
 
 class RandomAgent(Agent):
     """
@@ -96,5 +94,23 @@ class RandomAgent(Agent):
 
     def choose_action(self, current_state: str) -> str:
         action: str = random.choice(self.actions)
-        print(f"{self.agent_id} (RandomAgent) chooses to {action}.")
         return action
+
+
+class TitForTatAgent(Agent):
+    """
+    Starts by cooperating and then mimics the partner's last action.
+    """
+
+    def __init__(self, agent_id: str):
+        super().__init__(agent_id)
+
+    def choose_action(self, current_state: Dict[str, Any]) -> str:
+        if current_state["round_number"] == 1:
+            return "cooperate"
+        partner_last_choice = current_state.get("partner_last_choice")
+        if partner_last_choice:
+            return partner_last_choice
+        else:
+            return "cooperate"  # Default to cooperate if no history
+

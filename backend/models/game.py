@@ -6,9 +6,8 @@ from .agents import AIAgent, Agent, RandomAgent
 
 
 
-
 class GameState:
-    def __init__(self, current_state: List[str, Any]) -> None:
+    def __init__(self, current_state: Dict[str, Any]) -> None:
         self.history: List[Dict[str, Any]] = [current_state]
         self.current_state: Dict[str, Any] = current_state
 
@@ -17,8 +16,7 @@ class GameState:
         self.current_state = new_state
 
     def get_history(self) -> str:
-        return str(self.history + "\n")
-
+        return str(self.history)
 
 class Game(ABC):
     def __init__(
@@ -101,8 +99,8 @@ class Game(ABC):
             # history = self.game_state.get_history()
 
             # Get actions from both players
-            action1 = self.player1.choose_action(self.game_state.current_state)
-            action2 = self.player2.choose_action(self.game_state.current_state)
+            action1 = self.player1.choose_action(self.game_state.get_history())
+            action2 = self.player2.choose_action(self.game_state.get_history())
 
             print(f"{self.player1.agent_id} chooses to {action1}.")
             print(f"{self.player2.agent_id} chooses to {action2}.")
@@ -116,5 +114,4 @@ class Game(ABC):
 
         # Final Report
         print("\n=== Game Over ===")
-        print(self.game_state.get_history())
         self.report_scores()
