@@ -5,6 +5,8 @@ from routes.game_routes import game_bp
 from routes.agent_routes import agent_bp
 import anthropic
 import os
+from models.agents import AIAgent, RandomAgent
+
 
 app = Flask(__name__)
 CORS(app)
@@ -21,12 +23,20 @@ models = {"haiku": "claude-3-haiku-20240307", "sonnet": "claude-3-5-sonnet-lates
 
 if __name__ == "__main__":
     # app.run(debug=True)
+
+    ai_agent = AIAgent(
+        agent_id="LLM",
+        model=models["haiku"],
+        client=client,
+        tools=prisoners_dilemma_tools,
+        default_tool=prisoners_dilemma_tools[0],
+    )
+
+    random_agent = RandomAgent(agent_id="Random", actions=["cooperate", "defect"])
+
     game = PrisonersDilemmaGame(
-        "player1",
-        "player2",
-        prisoners_dilemma_tools,
-        models["sonnet"],
-        client,
+        ai_agent,
+        random_agent,
         rounds=4,
     )
     game.play()

@@ -2,20 +2,18 @@
 
 from typing import Tuple, List, Dict, Any
 from .game import Game
+from .agents import Agent
 from datetime import date
 
 
 class PrisonersDilemmaGame(Game):
     def __init__(
         self,
-        player1_id: str,
-        player2_id: str,
-        tools: List[Dict[str, Any]],
-        model: str,
-        client: Any,
+        player1: Agent,
+        player2: Agent,
         rounds: int = 10,
     ):
-        system_prompt = """You are a prisoner awating sentencing with your partner. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
+        rules = """You are a prisoner awating sentencing with your partner. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
 
                 Below is the state information provided to you at each round:
 
@@ -34,11 +32,25 @@ class PrisonersDilemmaGame(Game):
                 Objective: Aim to minimize your own total sentence by carefully choosing to either "cooperate" or "defect" in each round, using the information provided. Consider the potential behaviors of your partner and how your own actions influence both immediate and future outcomes. You cannot change your decision after it’s made, and you will not know the partner’s choice until you commit.
 
                 Based on the provided game state, would you like to "cooperate" or "defect"?"""
-        super().__init__(
-            player1_id, player2_id, tools, model, client, rounds, system_prompt
-        )
 
-    def determine_outcome(self, action1: str, action2: str) -> Tuple[str, int, int]:
+        start_state = {
+            "round_number": 1,
+            "partner_last_choice": None,  # Unknown since it's the first round
+            "my_last_choice": None,  # Not applicable yet
+            "partner_reliability": 0.5,  # Assume 50% chance of partner cooperating for the first turn
+            "reward_matrix": {
+                "both_cooperate": 1,  # 1 year if both cooperate
+                "both_defect": 2,  # 2 years if both defect
+                "defect_cooperate": 0,  # 0 years if AI defects and partner cooperates
+                "cooperate_defect": 3,  # 3 years if AI cooperates and partner defects
+            },
+            "my_total_sentence": 0,  # Starting with no sentence
+            "partner_total_sentence": 0,  # Starting with no sentence for partner
+        }
+        super().__init__(rules, player1, player2, rounds)
+
+    def determine_outcome(self, action1: str, action2: str) -> Dict[str, any]:
+        new_state = dict(self.game_state.current_state)
         if action1 == "cooperate" and action2 == "cooperate":
             outcome = "Both players cooperated. Both receive 3 points."
             score1, score2 = 3, 3
