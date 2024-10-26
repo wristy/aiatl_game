@@ -39,11 +39,11 @@ if __name__ == "__main__":
     always_defect_agent = AlwaysDefectAgent(agent_id="Always Defect")\
     
     
-    gemini_agent = GeminiAgent(agent_id="Gemini", model="gemini-1.5-flash", tools=gemini_prisoners_dilemma_tools, default_tool=gemini_prisoners_dilemma_tools[0], rules="")
+    # gemini_agent = GeminiAgent(agent_id="Gemini", model="gemini-1.5-flash", tools=gemini_prisoners_dilemma_tools, default_tool=gemini_prisoners_dilemma_tools[0], rules="")
 
 
     game = PrisonersDilemmaGame(
-        player1=gemini_agent,
+        player1=ai_agent,
         player2=random_agent,
         rounds=50,
     )
