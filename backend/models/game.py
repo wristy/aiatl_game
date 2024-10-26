@@ -1,27 +1,28 @@
 from abc import ABC, abstractmethod
 from datetime import date
+from typing import List, Tuple, Dict, Any
 
 class GameState:
-    def __init__(self):
-        self.history = []  # List of tuples: (player1_action, player2_action, outcome)
-        self.scores = {"player1": 0, "player2": 0}
+    def __init__(self) -> None:
+        self.history: List[Tuple[str, str, str]] = []  # List of tuples: (player1_action, player2_action, outcome)
+        self.scores: Dict[str, int] = {"player1": 0, "player2": 0}
 
-    def record_game(self, action1, action2, outcome, score1, score2):
+    def record_game(self, action1: str, action2: str, outcome: str, score1: int, score2: int) -> None:
         self.history.append((action1, action2, outcome))
         self.scores["player1"] += score1
         self.scores["player2"] += score2
 
-    def get_history(self):
+    def get_history(self) -> str:
         history_str = ""
         for idx, (a1, a2, outcome) in enumerate(self.history, 1):
             history_str += f"Round {idx}:\n  Player 1: {a1}\n  Player 2: {a2}\n  Outcome: {outcome}\n"
         return history_str
 
-    def get_scores(self):
+    def get_scores(self) -> Dict[str, int]:
         return self.scores
 
 class Game(ABC):
-    def __init__(self, player1_id, player2_id, tools, model, client, rounds=10):
+    def __init__(self, player1_id: str, player2_id: str, tools: List[Dict[str, Any]], model: str, client: Any, rounds: int = 10) -> None:
         self.player1_id = player1_id
         self.player2_id = player2_id
         self.tools = tools
@@ -31,14 +32,14 @@ class Game(ABC):
         self.game_state = GameState()
 
     @abstractmethod
-    def determine_outcome(self, action1, action2):
+    def determine_outcome(self, action1: str, action2: str) -> Tuple[str, int, int]:
         pass
 
     @abstractmethod
-    def report_scores(self):
+    def report_scores(self) -> None:
         pass
-
-    def agent_decision(self, player_id, history):
+    
+    def agent_decision(self, player_id: str, history: str) -> str:
         messages = [{
             "role": "system",
             "content": f"""
@@ -75,14 +76,14 @@ class Game(ABC):
             return self.default_action()
 
     @abstractmethod
-    def is_valid_action(self, action):
+    def is_valid_action(self, action: str) -> bool:
         pass
 
     @abstractmethod
-    def default_action(self):
+    def default_action(self) -> str:
         pass
 
-    def play(self):
+    def play(self) -> None:
         for round_num in range(1, self.rounds + 1):
             print(f"\n=== Round {round_num} ===")
 
@@ -107,4 +108,3 @@ class Game(ABC):
         print("\n=== Game Over ===")
         print(self.game_state.get_history())
         self.report_scores()
-
