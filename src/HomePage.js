@@ -1,20 +1,22 @@
 import { React, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Select, Box, MenuItem, Typography, CircularProgress, TextField, Button } from "@mui/material";
+import { Select, Box, MenuItem, Typography, CircularProgress, TextField, Button, IconButton } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import './App.css';
 import axios from 'axios';
-// import { Box } from "@mui/material/Box";
+
 
 function HomePage() {
-    const [agent1, setAgent1] = useState('Sonnet');
-    const [agent2, setAgent2] = useState('Sonnet'); 
+    const url = 'http://localhost:5000';
+    const [agent1, setAgent1] = useState('sonnet');
+    const [agent2, setAgent2] = useState('haiku'); 
     const [rounds, setRounds] = useState(50);
 
     const options = [
-        { value: "Sonnet", label: "Sonnet" },
-        { value: "Haiku", label: "Haiku" },
-        { value: "Gemini", label: "Gemini" },
+        { value: "sonnet", label: "Sonnet" },
+        { value: "haiku", label: "Haiku" },
+        { value: "gemini", label: "Gemini" },
     ];
       
     const [text, setText] = useState('');
@@ -30,18 +32,24 @@ function HomePage() {
     useEffect(() => {
         const fetchText = async () => {
             try {
-                const response = await fetch(``); // api call
+                const response = await fetch(`${url}/data_request`); // API call
                 const data = await response.json();
-                setText(data.text);
+                setText((prevText) => prevText ? `${prevText}\n---------------------------------------------\n${data.history}` : data.history);
             } catch (error) {
                 console.error('Error fetching text:', error);
-                setText('Failed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load text');
+                setText('Failed to load text...');
             } finally {
                 setLoading(false);
             }
         };
     
-        fetchText();
+        fetchText(); // Initial fetch
+        const intervalId = setInterval(fetchText, 10000); // Fetch text every 10 seconds
+    
+        // Cleanup function to clear the interval
+        return () => {
+            clearInterval(intervalId);
+        };
     }, []);
 
     const handleAgent1Change = (event) => {
@@ -62,11 +70,7 @@ function HomePage() {
         } else {
           setError(true); // Set error state if the input is not an integer
         }
-      };
-
-    // const onAgentChange = (value) => {
-    //     console.log(value);
-    // };
+    };
 
     const onPlay = () => {
         const data = {
@@ -75,7 +79,7 @@ function HomePage() {
             rounds: rounds,
         };
 
-        axios.post(``, data)
+        axios.post(`${url}/play`, data)
             .then(response => {
                 console.log('Data submitted successfully:', response.data);
             })
@@ -86,7 +90,20 @@ function HomePage() {
 
     return (
         <Box className="full-viewport" sx={{height: '100vh'}}>
+            <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center'}}>
             <h1 style={{color: 'white', textAlign: 'left', marginLeft: '10%' }}><code>LLM</code></h1>
+            <Box sx={{display: 'flex', flex: 1}}></Box>
+            <Button variant="primary" 
+                        sx={{
+                            backgroundColor: '#00FF81',
+                            // maxWidth: '10px',
+                            height: '100%',
+                            marginRight: '10%'}}
+                        onClick={onPlay}
+            >
+                <PlayArrowIcon />
+            </Button>
+            </Box>
             {/* select models and no. of rounds */ }
             <Box 
             sx={{

@@ -9,6 +9,7 @@ game = None
 
 @game_bp.route('/play', methods=['POST'])
 def play():
+    global game
     data = request.json
     # parse json
     agent1_model = models[data.get("agent1")]
@@ -38,16 +39,21 @@ def play():
             rounds=rounds
         )
 
-    except:
-        print("Error")
-        return 400
+    except KeyError as e:
+        return jsonify({"error": f"Invalid agent model: {str(e)}"}), 400
 
-    return  200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"error": "An error occurred"}), 500
+
+    return jsonify({"message": "Game initialized successfully"}), 200
 
 @game_bp.route('/data_request', methods=['GET'])
 def send():
     response = []
     if game is not None:
-        return jsonify("history:" + game.game_state.get_history()), 200
+        return jsonify({"history": "history:" + game.game_state.get_history()}), 200
     # parse json
-    return 400
+    else:
+        print("Game is None")
+        return jsonify({"error": "Game not found"}), 400
