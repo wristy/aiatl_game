@@ -1,6 +1,8 @@
 import { React, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Select, Box, MenuItem, Typography, TextField, Button, IconButton } from "@mui/material";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { styled } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import './App.css';
@@ -8,6 +10,10 @@ import axios from 'axios';
 
 
 function HomePage() {
+    const WhiteArrowDropDownIcon = styled(ArrowDropDownIcon)({
+        color: 'white',
+    });
+
     const url = 'http://localhost:5000';
     const [gameInitialized, setGameInitialized] = useState(false);
 
@@ -37,9 +43,20 @@ function HomePage() {
 
         const fetchPlayer1History = async () => {
             try {
-                const response = await fetch(`${url}/data_request`);
+                const response = await fetch(`${url}/data_request`,{
+                    method: 'GET',}
+                );
                 const data = await response.json();
-                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1: " + data.history.player1);
+                if ("error" in data) {
+                    return;
+                }
+                // console.log(data);
+                const json_data = JSON.parse(data['history']);
+                console.log(Object.keys(json_data))
+                // json_data.forEach((key) => {
+                //     console.log(key);
+                // });
+                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1: " + JSON.parse(data['history'].replace(/'/g, '"')));
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
             } finally {
@@ -61,9 +78,17 @@ function HomePage() {
 
         const fetchPlayer2History = async () => {
             try {
-                const response = await fetch(`${url}/data_request`);
+                const response = await fetch(`${url}/data_request`,{
+                    method: 'GET',}
+                );
                 const data = await response.json();
-                setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2:" + data.history.player2);
+                if ("error" in data) {
+                    return;
+                }
+                // console.log(data);
+                // console.log(JSON.parse(data['history']));
+                console.log(JSON.parse("'" + data['history'].replace(/'/g, '"').slice(1, -1) + "'"));
+                // setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2:" + JSON.parse("'" + data['history'].replace(/'/g, '"').slice(1, -1) + "'"));
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
             } finally {
@@ -107,11 +132,14 @@ function HomePage() {
             rounds: rounds,
         };
 
-        axios.post(`${url}/play`, data)
-            .then(response => {
-                console.log('Data submitted successfully:', response.data);
-                setGameInitialized(true);
-            })
+        setGameInitialized(true);
+        fetch(`${url}/play`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
             .catch(error => {
                 console.error('Error submitting data:', error);
             });
@@ -147,6 +175,7 @@ function HomePage() {
                     defaultValue={agent1}
                     onChange={handleAgent1Change} 
                     displayEmpty
+                    IconComponent={WhiteArrowDropDownIcon}
                     sx = {{color: 'white',
                            backgroundColor: '#2b2340',
                         //    outlineColor: 'white'
@@ -219,6 +248,7 @@ function HomePage() {
                     defaultValue={agent2} 
                     onChange={handleAgent2Change} 
                     displayEmpty
+                    IconComponent={WhiteArrowDropDownIcon}
                     sx = {{color: 'white',
                            backgroundColor: '#2b2340'
                     }}

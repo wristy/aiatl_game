@@ -4,6 +4,7 @@ from datetime import date
 from typing import List, Tuple, Dict, Any
 from .agents import AIAgent, Agent, RandomAgent
 from collections import deque
+import json
 
 class GameState:
     def __init__(self, current_state: Dict[str, Any]) -> None:
@@ -11,10 +12,15 @@ class GameState:
         self.current_state: Dict[str, Any] = current_state
 
     def record_game(self, new_state) -> None:
+        self.history['player1'].append(new_state['history']['player1'])
+        self.history['player2'].append(new_state['history']['player2'])
         self.current_state = new_state
 
     def get_history(self) -> Dict[str, List[str]]:
         return self.history
+    
+    def get_history_json(self) -> str:
+        return json.dumps(self.history)
 
 class Game(ABC):
     def __init__(
@@ -39,55 +45,6 @@ class Game(ABC):
     def report_scores(self) -> None:
         pass
 
-    # def agent_decision(self, player_id: str, history: str) -> str:
-    #     messages = [
-    #         {
-    #             "role": "user",
-    #             "content": f"""
-
-    #         You are {player_id} participating in the game.
-    #         Here is the history of previous rounds:
-
-    #         {history}
-
-    #         Choose your action for the next round. Use the provided tools to make your decision.
-    #         """,
-    #         }
-    #     ]
-
-    #     system_prompt = f"""
-
-    #     """
-
-    #     print(f"{player_id}: ")
-    #     response = self.client.messages.create(
-    #         system=self.system_prompt,
-    #         model=self.model,
-    #         messages=messages,
-    #         max_tokens=100,
-    #         tool_choice={"type": "auto"},
-    #         tools=self.tools,
-    #     )
-
-    #     print(f"message: {messages}")
-    #     last_content_block = response.content[-1]
-    #     print(response)
-    #     if last_content_block.type == "text":
-    #         # Fallback if no tool is used
-    #         action = last_content_block.text.strip().lower()
-    #         return action if self.is_valid_action(action) else self.default_action()
-    #     elif last_content_block.type == "tool_use":
-    #         return last_content_block.name
-    #     else:
-    #         return self.default_action()
-
-    # @abstractmethod
-    # def is_valid_action(self, action: str) -> bool:
-    #     pass
-
-    # @abstractmethod
-    # def default_action(self) -> str:
-    #     pass
 
     def play(self) -> None:
         player1_queue = deque(["cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate"])
