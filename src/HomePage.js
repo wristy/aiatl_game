@@ -1,6 +1,6 @@
 import { React, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Select, Box, MenuItem, Typography, CircularProgress, TextField, Button, IconButton } from "@mui/material";
+import { Select, Box, MenuItem, Typography, TextField, Button, IconButton } from "@mui/material";
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import './App.css';
@@ -9,9 +9,11 @@ import axios from 'axios';
 
 function HomePage() {
     const url = 'http://localhost:5000';
+    const [gameInitialized, setGameInitialized] = useState(false);
+
     const [agent1, setAgent1] = useState('sonnet');
     const [agent2, setAgent2] = useState('haiku'); 
-    const [rounds, setRounds] = useState(50);
+    const [rounds, setRounds] = useState(10);
 
     const options = [
         { value: "sonnet", label: "Sonnet" },
@@ -19,7 +21,8 @@ function HomePage() {
         { value: "gemini", label: "Gemini" },
     ];
       
-    const [text, setText] = useState('');
+    const [player1History, setPlayer1History] = useState([]);
+    const [player2History, setPlayer2History] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [error, setError] = useState(false);
@@ -30,27 +33,52 @@ function HomePage() {
     };
 
     useEffect(() => {
-        const fetchText = async () => {
+        if (!gameInitialized) return;
+
+        const fetchPlayer1History = async () => {
             try {
-                const response = await fetch(`${url}/data_request`); // API call
+                const response = await fetch(`${url}/data_request`);
                 const data = await response.json();
-                setText((prevText) => prevText ? `${prevText}\n---------------------------------------------\n${data.history}` : data.history);
+                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1: " + data.history.player1);
             } catch (error) {
-                console.error('Error fetching text:', error);
-                setText('Failed to load text...');
+                console.error('Error fetching player1 history:', error);
             } finally {
                 setLoading(false);
             }
         };
-    
-        fetchText(); // Initial fetch
-        const intervalId = setInterval(fetchText, 10000); // Fetch text every 10 seconds
-    
+
+        fetchPlayer1History(); // Initial fetch
+        const intervalId = setInterval(fetchPlayer1History, 10000); // Fetch every 10 seconds
+
         // Cleanup function to clear the interval
         return () => {
             clearInterval(intervalId);
         };
-    }, []);
+    }, [gameInitialized]);
+
+    useEffect(() => {
+        if (!gameInitialized) return;
+
+        const fetchPlayer2History = async () => {
+            try {
+                const response = await fetch(`${url}/data_request`);
+                const data = await response.json();
+                setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2:" + data.history.player2);
+            } catch (error) {
+                console.error('Error fetching player1 history:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPlayer2History(); // Initial fetch
+        const intervalId = setInterval(fetchPlayer2History, 10000); // Fetch every 10 seconds
+
+        // Cleanup function to clear the interval
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [gameInitialized]);
 
     const handleAgent1Change = (event) => {
         setAgent1(event.target.value);
@@ -82,6 +110,7 @@ function HomePage() {
         axios.post(`${url}/play`, data)
             .then(response => {
                 console.log('Data submitted successfully:', response.data);
+                setGameInitialized(true);
             })
             .catch(error => {
                 console.error('Error submitting data:', error);
@@ -215,9 +244,9 @@ function HomePage() {
                 mx: '10%',
                 my: '1%'
             }}>
-                {loading ? (
+                {/* {loading ? (
                     <CircularProgress />
-                ) : (
+                ) : ( */}
                     <Typography variant="body2" sx={{ 
                         fontSize: '12px',
                         color: 'white',
@@ -233,18 +262,18 @@ function HomePage() {
                         overflowX: 'hidden',      // Hides horizontal overflow if text wraps
                         whiteSpace: 'pre-wrap',
                     }}>
-                    {text}
+                    {player1History}
                     </Typography>
-                )}
+                {/* )} */}
                 <Box
                     sx={{display: 'flex',
                         flex: '1',
                     flexDirection: 'row',
                     }}
                 ></Box>
-                {loading ? (
+                {/* {loading ? (
                     <CircularProgress />
-                ) : (
+                ) : ( */}
                     <Typography variant="body2" sx={{ 
                         fontSize: '12px',
                         color: 'white',
@@ -260,9 +289,9 @@ function HomePage() {
                         overflowX: 'hidden',      // Hides horizontal overflow if text wraps
                         whiteSpace: 'pre-wrap',
                     }}>
-                    {text}
+                    {player2History} 
                     </Typography>
-                )}
+                {/* )} */}
             </Box>
             <Box sx={{
                 display: 'flex',

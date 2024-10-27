@@ -71,11 +71,13 @@ def send():
         # agent_decisions = game.agent_decisions 
         
         response = {
-            "history": json.dumps(history),
+            # "history": json.dumps(history),
             "current_state": current_state
             # "agentDecisions": agent_decisions
         }
-        return jsonify(response), 200
+        
+        print(f"History from GameState: {history}")
+        return jsonify(current_state), 200
     # parse json
     else:
         print("Game is None")
