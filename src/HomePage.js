@@ -14,7 +14,7 @@ function HomePage() {
         color: 'white',
     });
 
-    const url = 'http://localhost:5000';
+    const url = 'http://0.0.0.0:5000';
     const [gameInitialized, setGameInitialized] = useState(false);
 
     const [agent1, setAgent1] = useState('sonnet');
@@ -50,9 +50,10 @@ function HomePage() {
                 if ("error" in data) {
                     return;
                 }
-                // console.log(data);
-                const json_data = JSON.parse(data['history']);
-                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1: " + JSON.parse(data['history']));
+
+                const json_data = JSON.parse(data['history']).player1;
+                const p1_data = JSON.parse(json_data[json_data.length - 1]);
+                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1 chose to " + p1_data.action + ".\n\nReasoning: " + p1_data.reasoning);
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
             } finally {
@@ -81,12 +82,11 @@ function HomePage() {
                 if ("error" in data) {
                     return;
                 }
-                // console.log(data);
-                // console.log(JSON.parse(data['history']));
-                console.log(JSON.parse(data['history']));
-                // setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2:" + JSON.parse("'" + data['history'].replace(/'/g, '"').slice(1, -1) + "'"));
+                const json_data = JSON.parse(data['history']).player2;
+                const p2_data = JSON.parse(json_data[json_data.length - 1]);
+                setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2 chose to " + p2_data.action + ".\n\nReasoning: " + p2_data.reasoning);
             } catch (error) {
-                console.error('Error fetching player1 history:', error);
+                console.error('Error fetching player2 history:', error);
             } finally {
                 setLoading(false);
             }

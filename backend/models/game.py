@@ -9,17 +9,22 @@ import json
 
 class GameState:
     def __init__(self, current_state: Dict[str, Any]) -> None:
-        self.history: Dict[str, List[str]] = {"player1": [], "player2": []}
+        self.history: Dict[str, List[Any]] = {"player1": [], "player2": []}
         self.current_state: Dict[str, Any] = current_state
 
     def record_game(self, new_state) -> None:
-        self.history['player1'].append(new_state['history']['player1'])
-        self.history['player2'].append(new_state['history']['player2'])
+        self.history['player1'] = new_state['history']['player1']
+        self.history['player2'] = new_state['history']['player2']
         self.current_state = new_state
 
     def get_history(self) -> Dict[str, List[str]]:
         return self.history
 
+    def get_action_history(self) -> Dict[str, List[str]]:
+        return {
+            "player1": [json.loads(ls)["action"] for ls in self.current_state['history']["player1"]],
+            "player2": [json.loads(ls)["action"] for ls in self.current_state['history']["player2"]]
+        }
 class Game(ABC):
     def __init__(
         self,
@@ -34,11 +39,11 @@ class Game(ABC):
         self.game_state = GameState(start_state)
 
     @abstractmethod
-    def game_rules() -> str:
+    def game_rules(player_id: str) -> str:
         pass
 
     @abstractmethod
-    def determine_outcome(self, action1: str, action2: str) -> Dict[str, Any]:
+    def determine_outcome(self, action1: ToolAction, action2: ToolAction) -> Dict[str, Any]:
         pass
 
     @abstractmethod
@@ -53,15 +58,15 @@ class Game(ABC):
             # history = self.game_state.get_history()
 
             # Get actions from both players
-            a1: ToolAction = self.player1.choose_action(self.game_state.current_state)
-            a2: ToolAction = self.player2.choose_action(self.game_state.current_state)
+            a1: ToolAction = self.player1.choose_action(json.dumps(self.game_state.get_action_history()))
+            a2: ToolAction = self.player2.choose_action(json.dumps(self.game_state.get_action_history()))
 
             print(f"{self.player1.agent_id} chooses to {a1.name}. Reasoning: {a1.parameters['reasoning']}")
             print(f"{self.player2.agent_id} chooses to {a2.name}. Reasoning: {a2.parameters['reasoning']}")
 
             # Determine outcome
-            new_state = self.determine_outcome(a1.name, a2.name)
-            print(f"Outcome: {new_state}")
+            new_state = self.determine_outcome(a1, a2)
+            # print(f"Outcome: {new_state}")
 
             # Record the game
             self.game_state.record_game(new_state)

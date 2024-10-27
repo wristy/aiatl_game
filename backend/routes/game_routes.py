@@ -24,30 +24,30 @@ def play():
     ai_agent2: LLMModel = None
     if (agent1_model == models["gemini"]):
         ai_agent1 = AIAgent(
-            agent_id="LLM",
-            model=GeminiModel(name = agent1_model, system_instruction = PrisonersDilemmaGame.game_rules(), api_key = os.getenv("GEMINI_API_KEY")),
+            agent_id="Player 1",
+            model=GeminiModel(name = agent1_model, system_instruction = PrisonersDilemmaGame.game_rules("Player 1"), api_key = os.getenv("GEMINI_API_KEY")),
             tools=prisoners_dilemma_tools,
             default_tool=prisoners_dilemma_tools[0],
         )
     else:
         ai_agent1 = AIAgent(
-            agent_id="LLM",
-            model=AnthropicModel(name = agent2_model, system_instruction = PrisonersDilemmaGame.game_rules(), api_key = os.getenv("ANTHROPIC_API_KEY")),
+            agent_id="Player 1",
+            model=AnthropicModel(name = agent1_model, system_instruction = PrisonersDilemmaGame.game_rules("Player 1"), api_key = os.getenv("ANTHROPIC_API_KEY")),
             tools=prisoners_dilemma_tools,
             default_tool=prisoners_dilemma_tools[0],
         )
 
     if (agent2_model == models["gemini"]):
         ai_agent2 = AIAgent(
-            agent_id="LLM",
-            model=GeminiModel(name = agent1_model, system_instruction = PrisonersDilemmaGame.game_rules(), api_key = os.getenv("GEMINI_API_KEY")),
+            agent_id="Player 2",
+            model=GeminiModel(name = agent2_model, system_instruction = PrisonersDilemmaGame.game_rules("Player 2"), api_key = os.getenv("GEMINI_API_KEY")),
             tools=prisoners_dilemma_tools,
             default_tool=prisoners_dilemma_tools[0],
         )
     else:
         ai_agent2 = AIAgent(
-            agent_id="LLM",
-            model=AnthropicModel(name = agent2_model, system_instruction = PrisonersDilemmaGame.game_rules(), api_key = os.getenv("ANTHROPIC_API_KEY")),
+            agent_id="Player 2",
+            model=AnthropicModel(name = agent2_model, system_instruction = PrisonersDilemmaGame.game_rules("Player 2"), api_key = os.getenv("ANTHROPIC_API_KEY")),
             tools=prisoners_dilemma_tools,
             default_tool=prisoners_dilemma_tools[0],
         )
@@ -76,7 +76,8 @@ def send():
     global game
     # response = []
     if game is not None:
-        history = json.dumps(str(game.game_state.get_history()))
+        print(game.game_state.get_action_history())
+        history = json.dumps(game.game_state.get_history())
         current_state = {
             # "round_number": game.game_state.current_state["round_number"],
             "history": history,

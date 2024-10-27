@@ -17,7 +17,7 @@ class Agent(ABC):
         self.score: int = 0
 
     @abstractmethod
-    def choose_action(self, current_state: str) -> str:
+    def choose_action(self, current_state: str) -> ToolAction:
         """
         Decide on an action based on the game history.
         Must be implemented by all subclasses.

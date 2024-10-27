@@ -1,11 +1,12 @@
 # prisoner_dilemma_game.py
 
 from typing import Callable, Tuple, List, Dict, Any
-from .game import Game
+from .game import Game, GameState
 from .agents import Agent
 import glob
 from google.generativeai.types import FunctionDeclaration
-from .models import Tool, ToolParameter
+from .models import Tool, ToolParameter, ToolAction
+import json
 
 
 class PrisonersDilemmaGame(Game):
@@ -55,8 +56,8 @@ class PrisonersDilemmaGame(Game):
         self.agent_2_mimicry_count = 0
         self.agent_1_mimicry_count = 0
 
-    def game_rules():
-        return f"""You are awating sentencing with your partner. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
+    def game_rules(player_id):
+        return f"""You are {player_id}, and you are awating sentencing with your partner. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
 
                 - `round_number`: The current round of the game.
                 - `reward_matrix`: This shows the points outcomes for different choice combinations:
@@ -72,8 +73,8 @@ class PrisonersDilemmaGame(Game):
 
 
 
-    def determine_outcome(self, action1: str, action2: str) -> Tuple[str, int, int]:
-        if action1 == "cooperate" and action2 == "cooperate":
+    def determine_outcome(self, action1: ToolAction, action2: ToolAction) -> Dict[str, Any]:
+        if action1.name == "cooperate" and action2.name == "cooperate":
             outcome = "Both players cooperated. Both receive 3 points."
             score1, score2 = 3, 3
 
@@ -88,7 +89,7 @@ class PrisonersDilemmaGame(Game):
             
             self.agent_1_occasions_to_provoke +=1
             self.agent_2_occasions_to_provoke +=1
-        elif action1 == "cooperate" and action2 == "defect":
+        elif action1.name == "cooperate" and action2.name == "defect":
             outcome = f"{self.player1.agent_id} cooperated and {self.player2.agent_id} defected. {self.player1.agent_id} gets 0 points, {self.player2.agent_id} gets 5 points."
             score1, score2 = 0, 5
 
@@ -100,7 +101,9 @@ class PrisonersDilemmaGame(Game):
             #forgiveness propensity
             if (self.agent_2_last_action == "defect"):
                 self.agent_1_forgiven_defection +=1
-                self.agent_1_forgiveness_propensity = self.agent_1_forgiven_defection / (self.agent_2_defection + self.agent_1_penalties)
+                if (self.agent_2_defection + self.agent_1_penalties) != 0:
+                    self.agent_1_forgiveness_propensity = self.agent_1_forgiven_defection / (
+                                self.agent_2_defection + self.agent_1_penalties)
             
             #number of penalties may increase by 1
             if (self.agent_1_last_action == "defect"):
@@ -112,18 +115,20 @@ class PrisonersDilemmaGame(Game):
              #retaliatory
             if (self.agent_1_uncalled_defection_occurred):
                 self.agent_2_reactions +=1
-                self.agent_2_retaliatory = self.agent_2_reactions/self.agent_1_uncalled_defection
+                if self.agent_1_uncalled_defection != 0:
+                    self.agent_2_retaliatory = self.agent_2_reactions / self.agent_1_uncalled_defection
                 self.agent_1_uncalled_defection_occurred = 0
 
             #uncalled defection
             if ((self.agent_1_last_action, self.agent_2_last_action) == ("cooperate", "cooperate") or (self.agent_1_last_action, self.agent_2_last_action) == (0, 0)):
                 self.agent_2_uncalled_defection_occurred = 1
                 self.agent_2_uncalled_defection +=1
-                self.agent_2_troublemaking = self.agent_2_uncalled_defection / self.agent_1_occasions_to_provoke
+                if self.agent_1_occasions_to_provoke != 0:
+                    self.agent_2_troublemaking = self.agent_2_uncalled_defection / self.agent_1_occasions_to_provoke
 
             self.agent_1_occasions_to_provoke +=1
 
-        elif action1 == "defect" and action2 == "cooperate":
+        elif action1.name == "defect" and action2.name == "cooperate":
             outcome = f"{self.player1.agent_id} defected and {self.player2.agent_id} cooperated. {self.player1.agent_id} gets 5 points, {self.player2.agent_id} gets 0 points."
             score1, score2 = 5, 0
 
@@ -135,7 +140,9 @@ class PrisonersDilemmaGame(Game):
             #forgiveness propensity
             if (self.agent_1_last_action == "defect"):
                 self.agent_2_forgiven_defection +=1
-                self.agent_2_forgiveness_propensity = self.agent_2_forgiven_defection / (self.agent_1_defection + self.agent_2_penalties)
+                if (self.agent_1_defection + self.agent_2_penalties) != 0:
+                    self.agent_2_forgiveness_propensity = self.agent_2_forgiven_defection / (
+                                self.agent_1_defection + self.agent_2_penalties)
             
             #number of penalties may increase by 1
             if (self.agent_2_last_action == "defect"):
@@ -147,19 +154,21 @@ class PrisonersDilemmaGame(Game):
             #retaliatory
             if (self.agent_2_uncalled_defection_occurred):
                 self.agent_1_reactions +=1
-                self.agent_1_retaliatory = self.agent_1_reactions/self.agent_2_uncalled_defection
+                if self.agent_2_uncalled_defection != 0:
+                    self.agent_1_retaliatory = self.agent_1_reactions / self.agent_2_uncalled_defection
                 self.agent_2_uncalled_defection_occurred = 0
 
             #uncalled defection
             if ((self.agent_1_last_action, self.agent_2_last_action) == ("cooperate", "cooperate") or (self.agent_1_last_action, self.agent_2_last_action) == (0, 0)):
                 self.agent_1_uncalled_defection_occurred = 1
                 self.agent_1_uncalled_defection +=1
-                self.agent_1_troublemaking = self.agent_1_uncalled_defection / self.agent_2_occasions_to_provoke
+                if self.agent_2_occasions_to_provoke != 0:
+                    self.agent_1_troublemaking = self.agent_1_uncalled_defection / self.agent_2_occasions_to_provoke
             
             self.agent_2_occasions_to_provoke +=1
 
 
-        elif action1 == "defect" and action2 == "defect":
+        elif action1.name == "defect" and action2.name == "defect":
             outcome = "Both players defected. Both receive 1 point."
             score1, score2 = 1, 1
 
@@ -207,8 +216,8 @@ class PrisonersDilemmaGame(Game):
 
         current_history = self.game_state.get_history()
 
-        current_history["player1"].append(action1)
-        current_history["player2"].append(action2)
+        current_history["player1"].append(json.dumps({"action" : action1.name,"reasoning" : action1.parameters["reasoning"]}))
+        current_history["player2"].append(json.dumps({"action" : action2.name,"reasoning" : action2.parameters["reasoning"]}))
 
         # save to csv file
         self.write_csv(score1, score2)
@@ -216,13 +225,15 @@ class PrisonersDilemmaGame(Game):
         #mimicry_propensity
         if (action1 == self.agent_2_last_action):
             self.agent_1_mimicry_count +=1
-            self.agent_1_mimicry = self.agent_1_mimicry_count / (self.trial_number - 1)
+            if(self.trial_number - 1) != 0:
+                self.agent_1_mimicry = self.agent_1_mimicry_count / (self.trial_number - 1)
         if (action2 == self.agent_1_last_action):
-            self.agent_2_mimicry_count +=1 
-            self.agent_2_mimicry = self.agent_2_mimicry_count / (self.trial_number - 1)
+            self.agent_2_mimicry_count +=1
+            if (self.trial_number - 1) != 0:
+                self.agent_2_mimicry = self.agent_2_mimicry_count / (self.trial_number - 1)
 
-        self.agent_1_last_action = action1
-        self.agent_2_last_action = action2
+        self.agent_1_last_action = action1.name
+        self.agent_2_last_action = action2.name
 
         current_state = {
             "round_number": self.game_state.current_state["round_number"],

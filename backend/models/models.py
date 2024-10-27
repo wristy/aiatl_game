@@ -27,7 +27,7 @@ class ToolAction:
         return f"{self.name}({params_str})"
 
 class LLMModel(ABC):
-    def __init__(self, provider: str, name: str, system_instruction: str, api_key: str, temperature = 0.7, max_tokens = 200):
+    def __init__(self, provider: str, name: str, system_instruction: str, api_key: str, temperature = 1, max_tokens = 200):
         if not name:
             raise ValueError("The 'name' parameter cannot be an empty string.")
         if not api_key:
@@ -50,7 +50,7 @@ class LLMModel(ABC):
         pass
 
 class GeminiModel(LLMModel):
-    def __init__(self, name: str, system_instruction: str, api_key: str, temperature = 0.7, max_tokens = 200):
+    def __init__(self, name: str, system_instruction: str, api_key: str, temperature = 1, max_tokens = 200):
         super().__init__(provider="Google", name=name, system_instruction=system_instruction, api_key=api_key, temperature=temperature, max_tokens=max_tokens)
         genai.configure(api_key=self.api_key)
 
@@ -99,7 +99,7 @@ class GeminiModel(LLMModel):
         return gemini_tools
 
 class AnthropicModel(LLMModel):
-    def __init__(self, name: str, system_instruction: str, api_key: str, temperature = 0.7, max_tokens = 200):
+    def __init__(self, name: str, system_instruction: str, api_key: str, temperature = 1, max_tokens = 200):
         super().__init__(provider="Anthropic", name=name, system_instruction=system_instruction, api_key=api_key, temperature=temperature, max_tokens=max_tokens)
 
     def generate(self, content: str, tools: list) -> ToolAction:
