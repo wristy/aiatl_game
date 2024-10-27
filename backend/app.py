@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-from models.prisoners_dilemma import PrisonersDilemmaGame, prisoners_dilemma_tools
+from models.prisoners_dilemma import PrisonersDilemmaGame, prisoners_dilemma_tools, gemini_prisoners_dilemma_tools
 from routes.game_routes import game_bp
 from routes.agent_routes import agent_bp
 import os
@@ -9,6 +9,7 @@ from models.models import GeminiModel, AnthropicModel
 
 
 app = Flask(__name__)
+app.register_blueprint(game_bp)
 CORS(app)
 
 # client = anthropic.Client(api_key=API_KEY)
@@ -21,7 +22,7 @@ models = {"haiku": "claude-3-haiku-20240307", "sonnet": "claude-3-5-sonnet-lates
 
 
 if __name__ == "__main__":
-    # app.run(debug=True)
+    app.run(debug=True)
 
     ai_agent = AIAgent(
         agent_id="LLM",
@@ -30,7 +31,7 @@ if __name__ == "__main__":
         default_tool=prisoners_dilemma_tools[0],
     )
 
-    random_agent = RandomAgent(agent_id="Random", actions=["cooperate", "defect"])
+    # random_agent = RandomAgent(agent_id="Random", actions=["cooperate", "defect"])
 
     tit_for_tat_agent = TitForTatAgent(agent_id="Tit For Tat")
 
