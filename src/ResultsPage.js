@@ -4,8 +4,12 @@ import Plot from 'react-plotly.js';
 import axios from 'axios';
 import { IconButton, Box } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import { useLocation } from 'react-router-dom';
 
 function ResultsPage() {
+    const location = useLocation();
+    const queryParams = new URLSearchParams(location.search);
+
     const navigate = useNavigate();
     const handleHomeClick = () => {
         navigate('/');
@@ -41,6 +45,7 @@ function ResultsPage() {
     // ];
 
     const url = 'http://localhost:5000';
+    // const [currentState, setCurrentState] = useState(null);
     const [scoreOverTimeData, setScoreOverTimeData] = useState(null);
     const [scoreNiceness, setScoreNiceness] = useState(null);
     const [scoreForgiving, setScoreForgiving] = useState(null);
@@ -48,45 +53,82 @@ function ResultsPage() {
     const [scoreTroublemaking, setScoreTroublemaking] = useState(null);
     const [scoreEmulative, setScoreEmulative] = useState(null);
 
-    const [agent1niceness, setAgent1Niceness] = useState(0);
-    const [agent1forgiving, setAgent1Forgiving] = useState(0);
-    const [agent1retaliatory, setAgent1Retaliatory] = useState(0);
-    const [agent1troublemaking, setAgent1Troublemaking] = useState(0);
-    const [agent1emulative, setAgent1Emulative] = useState(0);
+    const [agent1niceness, setAgent1Niceness] = useState([]);
+    const [agent1forgiving, setAgent1Forgiving] = useState([]);
+    const [agent1retaliatory, setAgent1Retaliatory] = useState([]);
+    const [agent1troublemaking, setAgent1Troublemaking] = useState([]);
+    const [agent1emulative, setAgent1Emulative] = useState([]);
 
-    const [agent2niceness, setAgent2Niceness] = useState(0);
-    const [agent2forgiving, setAgent2Forgiving] = useState(0);
-    const [agent2retaliatory, setAgent2Retaliatory] = useState(0);
-    const [agent2troublemaking, setAgent2Troublemaking] = useState(0);
-    const [agent2emulative, setAgent2Emulative] = useState(0);
+    const [agent2niceness, setAgent2Niceness] = useState([]);
+    const [agent2forgiving, setAgent2Forgiving] = useState([]);
+    const [agent2retaliatory, setAgent2Retaliatory] = useState([]);
+    const [agent2troublemaking, setAgent2Troublemaking] = useState([]);
+    const [agent2emulative, setAgent2Emulative] = useState([]);
     // const [agentDecisions, setAgentDecisions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+
+    useEffect(() => {
+        // Log all query parameters for verification
+        for (let [key, value] of queryParams.entries()) {
+            // console.log(`${key}: ${value}`);
+        }
+    }, []);
+    
+    const parseQueryParams = (param) => {
+        const paramValue = queryParams.get(param);
+        try {
+            return paramValue ? JSON.parse(paramValue) : [];
+        } catch (error) {
+            console.error(`Error parsing ${param}:`, error);
+            return [];
+        }
+    };
+
+    const niceness1 = parseQueryParams('niceness1');
+    // console.log(niceness1);
+    const forgiveness1 = parseQueryParams('forgiveness1');
+    const retaliatory1 = parseQueryParams('retaliatory1');
+    const troublemaking1 = parseQueryParams('troublemaking1');
+    const emulative1 = parseQueryParams('emulative1');
+
+    const niceness2 = parseQueryParams('niceness2');
+    const forgiveness2 = parseQueryParams('forgiveness2');
+    const retaliatory2 = parseQueryParams('retaliatory2');
+    const troublemaking2 = parseQueryParams('troublemaking2');
+    const emulative2 = parseQueryParams('emulative2');
 
     useEffect(() => {
         // Fetch data from the backend API
         const fetchData = async () => {
         setLoading(true);
         try {
-            const response = await axios.get(`${url}/data_request`); // api call
-            const history = response.data.history;
+            const response = await fetch(`${url}/data_request`); // api call
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            const history = data.history;
             const historyArray = Object.values(history);
             const roundNumbers = historyArray.map(round => round.round_number);
             const myTotalPoints = historyArray.map(round => round.my_total_points);
+            // console.log(myTotalPoints);
             const partnerTotalPoints = historyArray.map(round => round.partner_total_points);
 
-            const currentState = response.data.current_state;
-            setAgent1Niceness(currentState.agent1_niceness);
-            setAgent1Forgiving(currentState.agent1_forgiveness);
-            setAgent1Retaliatory(currentState.agent1_retaliation);
-            setAgent1Troublemaking(currentState.agent1_troublemaking);
-            setAgent1Emulative(currentState.agent1_mimicry);
+            // setCurrentState(data.current_state);
+            setAgent1Niceness(niceness1);
+            console.log(niceness1);
+            console.log(agent1niceness);
+            setAgent1Forgiving(forgiveness1);
+            setAgent1Retaliatory(retaliatory1);
+            setAgent1Troublemaking(troublemaking1);
+            setAgent1Emulative(emulative1);
 
-            setAgent2Niceness(currentState.agent2_niceness);
-            setAgent2Forgiving(currentState.agent2_forgiveness);
-            setAgent2Retaliatory(currentState.agent2_retaliation);
-            setAgent2Troublemaking(currentState.agent2_troublemaking);
-            setAgent2Emulative(currentState.agent2_mimicry);
+            setAgent2Niceness(niceness2);
+            setAgent2Forgiving(forgiveness2);
+            setAgent2Retaliatory(retaliatory2);
+            setAgent2Troublemaking(troublemaking2);
+            setAgent2Emulative(emulative2);
 
             setScoreOverTimeData([{
                 x: roundNumbers,
@@ -106,95 +148,96 @@ function ResultsPage() {
             }
             ]);
 
-            setScoreNiceness([{
-                x: roundNumbers,
-                y: agent1niceness,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#AC5AF0' },
-                name: 'Agent 1'
-            },
-            {
-                x: roundNumbers,
-                y: agent2niceness,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#F04A3E' },
-                name: 'Agent 2'
-            }
-            ]);
+            // setScoreNiceness([{
+            //     x: roundNumbers,
+            //     y: agent1niceness,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#AC5AF0' },
+            //     name: 'Agent 1'
+            // },
+            // {
+            //     x: roundNumbers,
+            //     y: agent2niceness,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#F04A3E' },
+            //     name: 'Agent 2'
+            // }
+            // ]);
 
-            setScoreForgiving([{
-                x: roundNumbers,
-                y: agent1forgiving,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#AC5AF0' },
-                name: 'Agent 1'
-            },
-            {
-                x: roundNumbers,
-                y: agent2forgiving,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#F04A3E' },
-                name: 'Agent 2'
-            }
-            ]);
+            // setScoreForgiving([{
+            //     x: roundNumbers,
+            //     y: agent1forgiving,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#AC5AF0' },
+            //     name: 'Agent 1'
+            // },
+            // {
+            //     x: roundNumbers,
+            //     y: agent2forgiving,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#F04A3E' },
+            //     name: 'Agent 2'
+            // }
+            // ]);
 
-            setScoreRetaliatory([{
-                x: roundNumbers,
-                y: agent1retaliatory,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#AC5AF0' },
-                name: 'Agent 1'
-            },
-            {
-                x: roundNumbers,
-                y: agent2retaliatory,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#F04A3E' },
-                name: 'Agent 2'
-            }
-            ]);
+            // setScoreRetaliatory([{
+            //     x: roundNumbers,
+            //     y: agent1retaliatory,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#AC5AF0' },
+            //     name: 'Agent 1'
+            // },
+            // {
+            //     x: roundNumbers,
+            //     y: agent2retaliatory,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#F04A3E' },
+            //     name: 'Agent 2'
+            // }
+            // ]);
 
-            setScoreTroublemaking([{
-                x: roundNumbers,
-                y: agent1troublemaking,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#AC5AF0' },
-                name: 'Agent 1'
-            },
-            {
-                x: roundNumbers,
-                y: agent2troublemaking,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#F04A3E' },
-                name: 'Agent 2'
-            }
-            ]);
+            // setScoreTroublemaking([{
+            //     x: roundNumbers,
+            //     y: agent1troublemaking,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#AC5AF0' },
+            //     name: 'Agent 1'
+            // },
+            // {
+            //     x: roundNumbers,
+            //     y: agent2troublemaking,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#F04A3E' },
+            //     name: 'Agent 2'
+            // }
+            // ]);
 
-            setScoreEmulative([{
-                x: roundNumbers,
-                y: agent1emulative,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#AC5AF0' },
-                name: 'Agent 1'
-            },
-            {
-                x: roundNumbers,
-                y: agent2emulative,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#F04A3E' },
-                name: 'Agent 2'
-            }
-            ]);
+            // setScoreEmulative([{
+            //     x: roundNumbers,
+            //     y: agent1emulative,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#AC5AF0' },
+            //     name: 'Agent 1'
+            // },
+            // {
+            //     x: roundNumbers,
+            //     y: agent2emulative,
+            //     type: 'scatter',
+            //     mode: 'lines+markers',
+            //     marker: { color: '#F04A3E' },
+            //     name: 'Agent 2'
+            // }
+            // ]);
+            
 
             // setAgentDecisions(response.data.agentDecisions);
 
@@ -210,6 +253,132 @@ function ResultsPage() {
         fetchData();
     }, []);
 
+    useEffect(() => {
+        setScoreNiceness([
+            {
+                x: Array.from({ length: agent1niceness.length }, (_, i) => i + 1), // Assuming rounds are sequential
+                y: agent1niceness,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#AC5AF0' },
+                name: 'Agent 1 Niceness'
+            },
+            {
+                x: Array.from({ length: agent2niceness.length }, (_, i) => i + 1),
+                y: agent2niceness,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#F04A3E' },
+                name: 'Agent 2 Niceness'
+            }
+        ]);
+    }, [agent1niceness, agent2niceness]);
+
+    useEffect(() => {
+        setScoreNiceness([
+            {
+                x: Array.from({ length: agent1niceness.length }, (_, i) => i + 1), // Assuming rounds are sequential
+                y: agent1niceness,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#AC5AF0' },
+                name: 'Agent 1 Niceness'
+            },
+            {
+                x: Array.from({ length: agent2niceness.length }, (_, i) => i + 1),
+                y: agent2niceness,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#F04A3E' },
+                name: 'Agent 2 Niceness'
+            }
+        ]);
+    }, [agent1niceness, agent2niceness]);
+
+    useEffect(() => {
+        setScoreForgiving([
+            {
+                x: Array.from({ length: agent1forgiving.length }, (_, i) => i + 1),
+                y: agent1forgiving,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#AC5AF0' },
+                name: 'Agent 1 Forgiving'
+            },
+            {
+                x: Array.from({ length: agent2forgiving.length }, (_, i) => i + 1),
+                y: agent2forgiving,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#F04A3E' },
+                name: 'Agent 2 Forgiving'
+            }
+        ]);
+    }, [agent1forgiving, agent2forgiving]);
+
+    useEffect(() => {
+        setScoreRetaliatory([
+            {
+                x: Array.from({ length: agent1retaliatory.length }, (_, i) => i + 1),
+                y: agent1retaliatory,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#AC5AF0' },
+                name: 'Agent 1 Retaliatory'
+            },
+            {
+                x: Array.from({ length: agent2retaliatory.length }, (_, i) => i + 1),
+                y: agent2retaliatory,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#F04A3E' },
+                name: 'Agent 2 Retaliatory'
+            }
+        ]);
+    }, [agent1retaliatory, agent2retaliatory]);
+
+    useEffect(() => {
+        setScoreTroublemaking([
+            {
+                x: Array.from({ length: agent1troublemaking.length }, (_, i) => i + 1),
+                y: agent1troublemaking,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#AC5AF0' },
+                name: 'Agent 1 Troublemaking'
+            },
+            {
+                x: Array.from({ length: agent2troublemaking.length }, (_, i) => i + 1),
+                y: agent2troublemaking,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#F04A3E' },
+                name: 'Agent 2 Troublemaking'
+            }
+        ]);
+    }, [agent1troublemaking, agent2troublemaking]);
+
+    useEffect(() => {
+        setScoreEmulative([
+            {
+                x: Array.from({ length: agent1emulative.length }, (_, i) => i + 1),
+                y: agent1emulative,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#AC5AF0' },
+                name: 'Agent 1 Emulative'
+            },
+            {
+                x: Array.from({ length: agent2emulative.length }, (_, i) => i + 1),
+                y: agent2emulative,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#F04A3E' },
+                name: 'Agent 2 Emulative'
+            }
+        ]);
+    }, [agent1emulative, agent2emulative]);
+    
     return (
         <div>
             <div style={{display: 'flex', flex: 1, flexDirection: 'row'}}>
