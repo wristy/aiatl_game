@@ -1,97 +1,59 @@
+import time
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import List, Tuple, Dict, Any
 from .agents import AIAgent, Agent, RandomAgent
-
-
-
+from .models import ToolAction
+from collections import deque
+import json
 
 class GameState:
     def __init__(self, current_state: Dict[str, Any]) -> None:
-        self.history: List[Dict[str, Any]] = [current_state]
+        self.history: Dict[str, List[Any]] = {"player1": [], "player2": []}
         self.current_state: Dict[str, Any] = current_state
 
     def record_game(self, new_state) -> None:
-        self.history.append(new_state)
+        self.history['player1'] = new_state['history']['player1']
+        self.history['player2'] = new_state['history']['player2']
         self.current_state = new_state
 
-    def get_history(self) -> str:
-        return str(self.history)
+    def get_history(self) -> Dict[str, List[str]]:
+        return self.history
 
+    def get_action_history(self) -> Dict[str, List[str]]:
+        return {
+            "player1": [json.loads(ls)["action"] for ls in self.current_state['history']["player1"]],
+            "player2": [json.loads(ls)["action"] for ls in self.current_state['history']["player2"]]
+        }
 class Game(ABC):
     def __init__(
         self,
-        rules: str,
         start_state: Dict[str, Any],
         player1: Agent,
         player2: Agent,
         rounds: int = 10,
     ) -> None:
-        self.rules = rules
         self.player1 = player1
         self.player2 = player2
         self.rounds = rounds
         self.game_state = GameState(start_state)
+        self.game_status = "INITIALIZED"
+        self.round_number = 0
 
     @abstractmethod
-    def determine_outcome(self, action1: str, action2: str) -> Dict[str, Any]:
+    def game_rules(player_id: str) -> str:
+        pass
+
+    @abstractmethod
+    def determine_outcome(self, action1: ToolAction, action2: ToolAction) -> Dict[str, Any]:
         pass
 
     @abstractmethod
     def report_scores(self) -> None:
         pass
 
-    # def agent_decision(self, player_id: str, history: str) -> str:
-    #     messages = [
-    #         {
-    #             "role": "user",
-    #             "content": f"""
-
-    #         You are {player_id} participating in the game.
-    #         Here is the history of previous rounds:
-
-    #         {history}
-
-    #         Choose your action for the next round. Use the provided tools to make your decision.
-    #         """,
-    #         }
-    #     ]
-
-    #     system_prompt = f"""
-
-    #     """
-
-    #     print(f"{player_id}: ")
-    #     response = self.client.messages.create(
-    #         system=self.system_prompt,
-    #         model=self.model,
-    #         messages=messages,
-    #         max_tokens=100,
-    #         tool_choice={"type": "auto"},
-    #         tools=self.tools,
-    #     )
-
-    #     print(f"message: {messages}")
-    #     last_content_block = response.content[-1]
-    #     print(response)
-    #     if last_content_block.type == "text":
-    #         # Fallback if no tool is used
-    #         action = last_content_block.text.strip().lower()
-    #         return action if self.is_valid_action(action) else self.default_action()
-    #     elif last_content_block.type == "tool_use":
-    #         return last_content_block.name
-    #     else:
-    #         return self.default_action()
-
-    # @abstractmethod
-    # def is_valid_action(self, action: str) -> bool:
-    #     pass
-
-    # @abstractmethod
-    # def default_action(self) -> str:
-    #     pass
-
     def play(self) -> None:
+        self.game_status = "RUNNING"
         for round_num in range(1, self.rounds + 1):
             print(f"\n=== Round {round_num} ===")
 
@@ -99,19 +61,21 @@ class Game(ABC):
             # history = self.game_state.get_history()
 
             # Get actions from both players
-            action1 = self.player1.choose_action(self.game_state.get_history())
-            action2 = self.player2.choose_action(self.game_state.get_history())
+            a1: ToolAction = self.player1.choose_action(json.dumps(self.game_state.get_action_history()))
+            a2: ToolAction = self.player2.choose_action(json.dumps(self.game_state.get_action_history()))
 
-            print(f"{self.player1.agent_id} chooses to {action1}.")
-            print(f"{self.player2.agent_id} chooses to {action2}.")
+            print(f"{self.player1.agent_id} chooses to {a1.name}. Reasoning: {a1.parameters['reasoning']}")
+            print(f"{self.player2.agent_id} chooses to {a2.name}. Reasoning: {a2.parameters['reasoning']}")
 
             # Determine outcome
-            new_state = self.determine_outcome(action1, action2)
-            print(f"Outcome: {new_state}")
+            new_state = self.determine_outcome(a1, a2)
+            # print(f"Outcome: {new_state}")
 
             # Record the game
             self.game_state.record_game(new_state)
-
+            self.round_number += 1
+            time.sleep(5)
         # Final Report
         print("\n=== Game Over ===")
         self.report_scores()
+        self.game_status = "FINISHED"

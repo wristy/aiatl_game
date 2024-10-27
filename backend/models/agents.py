@@ -4,7 +4,8 @@ import random
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import List, Dict, Any, Optional
-
+import os
+from models.models import LLMModel, ToolAction
 
 class Agent(ABC):
     """
@@ -16,7 +17,7 @@ class Agent(ABC):
         self.score: int = 0
 
     @abstractmethod
-    def choose_action(self, current_state: str) -> str:
+    def choose_action(self, current_state: str) -> ToolAction:
         """
         Decide on an action based on the game history.
         Must be implemented by all subclasses.
@@ -32,53 +33,24 @@ class AIAgent(Agent):
     def __init__(
         self,
         agent_id: str,
-        model: str,
-        client: Any,
+        model: LLMModel,
         tools: List[Dict[str, Any]],
         default_tool: Dict[str, Any],
-        rules: str,
     ):
         super().__init__(agent_id)
-        self.model: str = model
-        self.client: Any = client
+        self.model: LLMModel = model
         self.tools: List[Dict[str, Any]] = tools
         self.default_tool: Dict[str, Any] = default_tool
-        self.rules = rules
 
-    def choose_action(self, current_state: str) -> str:
-
-        messages = [{"role": "user", "content": current_state}]
-
-        print(f"messages: {messages}")
-
-        try:
-            response = self.client.messages.create(
-                system=self.rules.format(id=self.agent_id),
-                model=self.model,
-                messages=messages,
-                max_tokens=100,
-                tool_choice={"type": "auto"},
-                tools=self.tools,
-            )
-            messages.append(response)
-            last_content_block = response.content[-1]
-            if last_content_block.type == "text":
-                # Fallback if no tool is used
-                action: str = last_content_block.text.strip().lower()
-                if self.is_valid_action(action):
-                    return action
-                else:
-                    return self.default_action()["name"]
-            elif last_content_block.type == "tool_use":
-                return last_content_block.name
-            else:
-                return self.default_action()["name"]
-        except Exception as e:
-            print(f"Error in AI Agent '{self.agent_id}': {e}")
-            return self.default_action()["name"]
+    def choose_action(self, current_state: str) -> ToolAction:
+        action: ToolAction = self.model.generate(current_state, self.tools)
+        if self.is_valid_action(action.name):
+            return action
+        else:
+            return (self.default_action()["name"], [""])
 
     def is_valid_action(self, action: str) -> bool:
-        return action in [tool["name"] for tool in self.tools]
+        return action in [tool.name for tool in self.tools]
 
     def default_action(self) -> Dict[str, Any]:
         return self.default_tool
@@ -92,9 +64,22 @@ class RandomAgent(Agent):
         super().__init__(agent_id)
         self.actions = actions
 
-    def choose_action(self, current_state: str) -> str:
-        action: str = random.choice(self.actions)
+    def choose_action(self, current_state: str) -> ToolAction:
+        action: ToolAction = ToolAction(random.choice(self.actions), [{"reasoning", "Randomly Selected"}])
         return action
+    
+class HumanAgent(Agent):
+    """
+    Human agent that allows user to input action.
+    """
+
+    def __init__(self, agent_id: str, actions: List[str]):
+        super().__init__(agent_id)
+        self.actions = actions
+
+    def choose_action(self, current_state: str) -> str:
+        action: str = input(f"{self.agent_id}, enter your action (number): ")
+        return self.actions[int(action)]
 
 
 class TitForTatAgent(Agent):
@@ -108,9 +93,27 @@ class TitForTatAgent(Agent):
     def choose_action(self, current_state: Dict[str, Any]) -> str:
         if current_state["round_number"] == 1:
             return "cooperate"
-        partner_last_choice = current_state.get("partner_last_choice")
+        partner_last_choice = current_state["history"]["player1"][-1]
         if partner_last_choice:
             return partner_last_choice
         else:
+            print(f"{self.agent_id} has no history, defaulting to cooperate")
             return "cooperate"  # Default to cooperate if no history
+        
+class SuspiciousTitForTatAgent(TitForTatAgent):
+    """
+    Starts by defecting and then mimics the partner's last action.
+    """
 
+    def choose_action(self, current_state: Dict[str, Any]) -> str:
+        if current_state["round_number"] == 1:
+            return "defect"
+        return super().choose_action(current_state)
+    
+class AlwaysDefectAgent(Agent):
+    """
+    Always defects.
+    """
+
+    def choose_action(self, current_state: Dict[str, Any]) -> str:
+        return ToolAction("defect", {"reasoning": "Will Always Defect"})
