@@ -21,7 +21,7 @@ class PrisonersDilemmaGame(Game):
         }
         super().__init__(start_state, player1, player2, rounds)
 
-        self.trial_number = len(glob.glob("./backend/Data/output/prisoners_dilemma_scores_*.csv")) + 1
+        self.trial_number = len(glob.glob("../Data/output/prisoners_dilemma_scores_*.csv")) + 1
 
         #statistical variables
         self.agent_1_nice_propensity = 1
@@ -250,7 +250,7 @@ class PrisonersDilemmaGame(Game):
         return "cooperate"
     
     def write_csv(self, score1: int, score2: int) -> None:
-        with open(f"./backend/Data/output/prisoners_dilemma_scores_{self.trial_number}.csv", "a") as f:
+        with open(f"Data/output/prisoners_dilemma_scores_{self.trial_number}.csv", "a") as f:
             f.write(f"{score1},{score2}\n")
 
 
