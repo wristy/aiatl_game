@@ -59,7 +59,7 @@ def send():
     global game
     # response = []
     if game is not None:
-        history = json.dumps(str(game.game_state.get_history()))
+        history = json.dumps(game.game_state.get_history())
         current_state = {
             # "round_number": game.game_state.current_state["round_number"],
             "history": history,

@@ -12,8 +12,8 @@ class GameState:
         self.current_state: Dict[str, Any] = current_state
 
     def record_game(self, new_state) -> None:
-        self.history['player1'].append(new_state['history']['player1'])
-        self.history['player2'].append(new_state['history']['player2'])
+        self.history['player1'] = (new_state['history']['player1'])
+        self.history['player2'] = (new_state['history']['player2'])
         self.current_state = new_state
 
     def get_history(self) -> Dict[str, List[str]]:

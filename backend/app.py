@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_cors import CORS
-# from models.prisoners_dilemma import PrisonersDilemmaGame, prisoners_dilemma_tools, gemini_prisoners_dilemma_tools
+from models.prisoners_dilemma import PrisonersDilemmaGame, prisoners_dilemma_tools
 from routes.game_routes import game_bp
 from routes.agent_routes import agent_bp
 import anthropic

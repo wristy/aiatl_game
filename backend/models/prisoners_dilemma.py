@@ -199,6 +199,11 @@ class PrisonersDilemmaGame(Game):
 
         self.game_state.current_state["round_number"] += 1
 
+        current_history = self.game_state.get_history()
+
+        current_history["player1"].append(action1)
+        current_history["player2"].append(action2)
+
         # save to csv file
         self.write_csv(score1, score2)
 
@@ -226,7 +231,6 @@ class PrisonersDilemmaGame(Game):
             "agent2_forgiveness": self.agent_2_forgiveness_propensity,
             "agent1_retaliation": self.agent_1_retaliatory,
             "agent2_retaliation": self.agent_2_retaliatory
-
         }
         return current_state
 

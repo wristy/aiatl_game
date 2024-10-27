@@ -35,6 +35,7 @@ function HomePage() {
 
     const navigate = useNavigate();
     const handleResultsClick = () => {
+        setGameInitialized(false);
         navigate('/results');
     };
 
@@ -50,13 +51,7 @@ function HomePage() {
                 if ("error" in data) {
                     return;
                 }
-                // console.log(data);
-                const json_data = JSON.parse(data['history']);
-                console.log(Object.keys(json_data))
-                // json_data.forEach((key) => {
-                //     console.log(key);
-                // });
-                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1: " + JSON.parse(data['history'].replace(/'/g, '"')));
+                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1: " + (JSON.parse(data["history"]).player1).at(-1));
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
             } finally {
@@ -85,10 +80,7 @@ function HomePage() {
                 if ("error" in data) {
                     return;
                 }
-                // console.log(data);
-                // console.log(JSON.parse(data['history']));
-                console.log(JSON.parse("'" + data['history'].replace(/'/g, '"').slice(1, -1) + "'"));
-                // setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2:" + JSON.parse("'" + data['history'].replace(/'/g, '"').slice(1, -1) + "'"));
+                setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2: " + (JSON.parse(data["history"]).player2).at(-1));
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
             } finally {
