@@ -23,7 +23,7 @@ class PrisonersDilemmaGame(Game):
         super().__init__(start_state, player1, player2, rounds)
 
         self.trial_number = len(glob.glob("../Data/output/prisoners_dilemma_scores_*.csv")) + 1
-
+        self.round_number = 0
         #statistical variables
         self.agent_1_nice_propensity = 1
         self.agent_2_nice_propensity = 1
@@ -212,8 +212,6 @@ class PrisonersDilemmaGame(Game):
         self.player1.score += score1
         self.player2.score += score2
 
-        self.game_state.current_state["round_number"] += 1
-
         current_history = self.game_state.get_history()
 
         current_history["player1"].append(json.dumps({"action" : action1.name,"reasoning" : action1.parameters["reasoning"]}))
@@ -236,7 +234,7 @@ class PrisonersDilemmaGame(Game):
         self.agent_2_last_action = action2.name
 
         current_state = {
-            "round_number": self.game_state.current_state["round_number"],
+            "round_number": self.round_number + 1,
             "history": current_history,
             "agent1_mimicry": self.agent_1_mimicry,
             "agent2_mimicry": self.agent_2_mimicry,
@@ -247,8 +245,9 @@ class PrisonersDilemmaGame(Game):
             "agent1_forgiveness": self.agent_1_forgiveness_propensity,
             "agent2_forgiveness": self.agent_2_forgiveness_propensity,
             "agent1_retaliation": self.agent_1_retaliatory,
-            "agent2_retaliation": self.agent_2_retaliatory
-
+            "agent2_retaliation": self.agent_2_retaliatory,
+            "agent1_score": self.player1.score,
+            "agent2_score": self.player2.score
         }
         return current_state
 

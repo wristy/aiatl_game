@@ -6,46 +6,36 @@ import { styled } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import './App.css';
+import { useAppContext } from './AppContext'; // Import the context
 
 function HomePage() {
-    const [metrics, setMetrics] = useState({
-        niceness1: [],
-        forgiveness1: [],
-        retaliatory1: [],
-        troublemaking1: [],
-        emulative1: [],
-        niceness2: [],
-        forgiveness2: [],
-        retaliatory2: [],
-        troublemaking2: [],
-        emulative2: []
-    });
+    const {
+        metrics, setMetrics,
+        gameInitialized, setGameInitialized,
+        agent1, setAgent1,
+        agent2, setAgent2,
+        rounds, setRounds,
+        player1History, setPlayer1History,
+        player2History, setPlayer2History,
+        error, setError,
+    } = useAppContext();
 
     const WhiteArrowDropDownIcon = styled(ArrowDropDownIcon)({
         color: 'white',
     });
 
     const url = 'http://0.0.0.0:5000';
-    const [gameInitialized, setGameInitialized] = useState(false);
     const boxRef = useRef(null);
-    const [agent1, setAgent1] = useState('sonnet');
-    const [agent2, setAgent2] = useState('haiku'); 
-    const [rounds, setRounds] = useState(10);
 
     const options = [
         { value: "sonnet", label: "Sonnet" },
         { value: "haiku", label: "Haiku" },
         { value: "gemini", label: "Gemini" },
     ];
-      
-    const [player1History, setPlayer1History] = useState([]);
-    const [player2History, setPlayer2History] = useState([]);
 
-    const [error, setError] = useState(false);
 
     const navigate = useNavigate();
     const handleResultsClick = () => {
-        setGameInitialized(false);
         console.log("game_initialize:" + gameInitialized);
         const queryParams = new URLSearchParams();
         Object.keys(metrics).forEach(key => {
@@ -64,6 +54,13 @@ function HomePage() {
                 );
                 const data = await response.json();
                 if (response.ok) {
+                  if (data.hasOwnProperty('message')) {
+                    if (data.message === "FINISHED") {
+                        console.log("Game finished");
+                        setGameInitialized(false);
+                        return;
+                    }
+                }
                     setMetrics(prevMetrics => ({
                         ...prevMetrics,
                         niceness1: [...prevMetrics.niceness1, data.agent1_niceness],
@@ -71,6 +68,7 @@ function HomePage() {
                         retaliatory1: [...prevMetrics.retaliatory1, data.agent1_retaliation],
                         troublemaking1: [...prevMetrics.troublemaking1, data.agent1_troublemaking],
                         emulative1: [...prevMetrics.emulative1, data.agent1_mimicry],
+                        score1: [...prevMetrics.score1, data.agent1_score],
                     }));
                 } else {
                     console.error('Error fetching data:', data.error);
@@ -78,14 +76,14 @@ function HomePage() {
 
                 const json_data = JSON.parse(data['history']).player1;
                 const p1_data = JSON.parse(json_data[json_data.length - 1]);
-                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1 chose to " + p1_data.action + ".\n\nReasoning: " + p1_data.reasoning);
+                setPlayer1History(prevHistory => prevHistory + "\n\nRound " + data.round_number + "----------------------------------\n" + "Player 1 chose to " + p1_data.action + ".\n\nReasoning: " + p1_data.reasoning);
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
             }
         };
 
         fetchPlayer1History(); // Initial fetch
-        const intervalId = setInterval(fetchPlayer1History, 10000); // Fetch every 10 seconds
+        const intervalId = setInterval(fetchPlayer1History, 5000); // Fetch every 10 seconds
 
         // Cleanup function to clear the interval
         return () => {
@@ -103,6 +101,13 @@ function HomePage() {
                 );
                 const data = await response.json();
                 if (response.ok) {
+                    if (data.hasOwnProperty('message')) {
+                        if (data.message === "FINISHED") {
+                            console.log("Game finished");
+//                            setGameInitialized(false);
+                            return;
+                        }
+                    }
                     setMetrics(prevMetrics => ({
                         ...prevMetrics,
                         niceness2: [...prevMetrics.niceness2, data.agent2_niceness],
@@ -110,13 +115,14 @@ function HomePage() {
                         retaliatory2: [...prevMetrics.retaliatory2, data.agent2_retaliation],
                         troublemaking2: [...prevMetrics.troublemaking2, data.agent2_troublemaking],
                         emulative2: [...prevMetrics.emulative2, data.agent2_mimicry],
+                        score2: [...prevMetrics.score2, data.agent2_score],
                     }));
                 } else {
                     console.error('Error fetching data:', data.error);
                 }
                 const json_data = JSON.parse(data['history']).player2;
                 const p2_data = JSON.parse(json_data[json_data.length - 1]);
-                setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2 chose to " + p2_data.action + ".\n\nReasoning: " + p2_data.reasoning);
+                setPlayer2History(prevHistory => prevHistory + "\n\nRound " + data.round_number + "----------------------------------\n" + "Player 2 chose to " + p2_data.action + ".\n\nReasoning: " + p2_data.reasoning);
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
             }
@@ -125,7 +131,7 @@ function HomePage() {
         fetchPlayer2History(); // Initial fetch
         let intervalId;
         if (gameInitialized) {
-            intervalId = setInterval(fetchPlayer2History, 10000); // Fetch every 10 seconds
+            intervalId = setInterval(fetchPlayer2History, 5000); // Fetch every 10 seconds
         }
 
         // Cleanup function to clear the interval
@@ -160,6 +166,9 @@ function HomePage() {
             agent2: agent2,
             rounds: rounds,
         };
+        setPlayer1History("");
+        setPlayer2History("");
+
 
         setGameInitialized(true);
         fetch(`${url}/play`, {

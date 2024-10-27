@@ -9,7 +9,7 @@ import json
 
 game_bp = Blueprint('game_bp', __name__)
 models = {"haiku": "claude-3-haiku-20240307", "sonnet": "claude-3-5-sonnet-latest", "gemini": "gemini-1.5-flash"}
-game = None
+game: PrisonersDilemmaGame = None
 
 @game_bp.route('/play', methods=['POST'])
 def play():
@@ -76,10 +76,12 @@ def send():
     global game
     # response = []
     if game is not None:
+        if (game.game_status == "FINISHED"):
+            return jsonify({"message": "FINISHED"}), 200
         print(game.game_state.get_action_history())
         history = json.dumps(game.game_state.get_history())
         current_state = {
-            # "round_number": game.game_state.current_state["round_number"],
+            "round_number": game.round_number,
             "history": history,
             "agent1_mimicry": game.agent_1_mimicry,
             "agent2_mimicry": game.agent_2_mimicry,
@@ -90,7 +92,9 @@ def send():
             "agent1_forgiveness": game.agent_1_forgiveness_propensity,
             "agent2_forgiveness": game.agent_2_forgiveness_propensity,
             "agent1_retaliation": game.agent_1_retaliatory,
-            "agent2_retaliation": game.agent_2_retaliatory
+            "agent2_retaliation": game.agent_2_retaliatory,
+            "agent1_score": game.player1.score,
+            "agent2_score": game.player2.score
         }
         # agent_decisions = game.agent_decisions
 

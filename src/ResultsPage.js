@@ -44,7 +44,7 @@ function ResultsPage() {
     //     { id: "Gemini", decisions: [false, true, false, true, true] },
     // ];
 
-    const url = 'http://localhost:5000';
+    const url = 'http://0.0.0.0:5000';
     // const [currentState, setCurrentState] = useState(null);
     const [scoreOverTimeData, setScoreOverTimeData] = useState(null);
     const [scoreNiceness, setScoreNiceness] = useState(null);
@@ -53,12 +53,14 @@ function ResultsPage() {
     const [scoreTroublemaking, setScoreTroublemaking] = useState(null);
     const [scoreEmulative, setScoreEmulative] = useState(null);
 
+    const [agent1scoreovertime, setAgent1ScoreOverTime] = useState([]);
     const [agent1niceness, setAgent1Niceness] = useState([]);
     const [agent1forgiving, setAgent1Forgiving] = useState([]);
     const [agent1retaliatory, setAgent1Retaliatory] = useState([]);
     const [agent1troublemaking, setAgent1Troublemaking] = useState([]);
     const [agent1emulative, setAgent1Emulative] = useState([]);
 
+    const [agent2scoreovertime, setAgent2ScoreOverTime] = useState([]);
     const [agent2niceness, setAgent2Niceness] = useState([]);
     const [agent2forgiving, setAgent2Forgiving] = useState([]);
     const [agent2retaliatory, setAgent2Retaliatory] = useState([]);
@@ -85,6 +87,7 @@ function ResultsPage() {
         }
     };
 
+    const score1 = parseQueryParams('score1');
     const niceness1 = parseQueryParams('niceness1');
     // console.log(niceness1);
     const forgiveness1 = parseQueryParams('forgiveness1');
@@ -92,6 +95,7 @@ function ResultsPage() {
     const troublemaking1 = parseQueryParams('troublemaking1');
     const emulative1 = parseQueryParams('emulative1');
 
+    const score2 = parseQueryParams('score2');
     const niceness2 = parseQueryParams('niceness2');
     const forgiveness2 = parseQueryParams('forgiveness2');
     const retaliatory2 = parseQueryParams('retaliatory2');
@@ -116,6 +120,7 @@ function ResultsPage() {
             const partnerTotalPoints = historyArray.map(round => round.partner_total_points);
 
             // setCurrentState(data.current_state);
+            setAgent1ScoreOverTime(score1)
             setAgent1Niceness(niceness1);
             console.log(niceness1);
             console.log(agent1niceness);
@@ -124,29 +129,30 @@ function ResultsPage() {
             setAgent1Troublemaking(troublemaking1);
             setAgent1Emulative(emulative1);
 
+            setAgent2ScoreOverTime(score2);
             setAgent2Niceness(niceness2);
             setAgent2Forgiving(forgiveness2);
             setAgent2Retaliatory(retaliatory2);
             setAgent2Troublemaking(troublemaking2);
             setAgent2Emulative(emulative2);
 
-            setScoreOverTimeData([{
-                x: roundNumbers,
-                y: myTotalPoints,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#AC5AF0' },
-                name: 'Agent 1'
-            },
-            {
-                x: roundNumbers,
-                y: partnerTotalPoints,
-                type: 'scatter',
-                mode: 'lines+markers',
-                marker: { color: '#F04A3E' },
-                name: 'Agent 2'
-            }
-            ]);
+//            setScoreOverTimeData([{
+//                x: roundNumbers,
+//                y: myTotalPoints,
+//                type: 'scatter',
+//                mode: 'lines+markers',
+//                marker: { color: '#AC5AF0' },
+//                name: 'Agent 1'
+//            },
+//            {
+//                x: roundNumbers,
+//                y: partnerTotalPoints,
+//                type: 'scatter',
+//                mode: 'lines+markers',
+//                marker: { color: '#F04A3E' },
+//                name: 'Agent 2'
+//            }
+//            ]);
 
             // setScoreNiceness([{
             //     x: roundNumbers,
@@ -252,6 +258,28 @@ function ResultsPage() {
 
         fetchData();
     }, []);
+
+
+    useEffect(() => {
+        setScoreOverTimeData([
+            {
+                x: Array.from({ length: agent1scoreovertime.length }, (_, i) => i + 1), // Assuming rounds are sequential
+                y: agent1scoreovertime,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#AC5AF0' },
+                name: 'Agent 1 Score'
+            },
+            {
+                x: Array.from({ length: agent2scoreovertime.length }, (_, i) => i + 1),
+                y: agent2scoreovertime,
+                type: 'scatter',
+                mode: 'lines+markers',
+                marker: { color: '#F04A3E' },
+                name: 'Agent 2 Score'
+            }
+        ]);
+    }, [agent1scoreovertime, agent2scoreovertime]);
 
     useEffect(() => {
         setScoreNiceness([

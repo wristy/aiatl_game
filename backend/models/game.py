@@ -37,6 +37,8 @@ class Game(ABC):
         self.player2 = player2
         self.rounds = rounds
         self.game_state = GameState(start_state)
+        self.game_status = "INITIALIZED"
+        self.round_number = 0
 
     @abstractmethod
     def game_rules(player_id: str) -> str:
@@ -51,6 +53,7 @@ class Game(ABC):
         pass
 
     def play(self) -> None:
+        self.game_status = "RUNNING"
         for round_num in range(1, self.rounds + 1):
             print(f"\n=== Round {round_num} ===")
 
@@ -70,7 +73,9 @@ class Game(ABC):
 
             # Record the game
             self.game_state.record_game(new_state)
-            time.sleep(10)
+            self.round_number += 1
+            time.sleep(5)
         # Final Report
         print("\n=== Game Over ===")
         self.report_scores()
+        self.game_status = "FINISHED"
