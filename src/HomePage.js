@@ -1,4 +1,4 @@
-import { React, useEffect, useState } from 'react';
+import { React, useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Select, Box, MenuItem, Typography, TextField, Button, IconButton } from "@mui/material";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -16,7 +16,7 @@ function HomePage() {
 
     const url = 'http://0.0.0.0:5000';
     const [gameInitialized, setGameInitialized] = useState(false);
-
+    const boxRef = useRef(null);
     const [agent1, setAgent1] = useState('sonnet');
     const [agent2, setAgent2] = useState('haiku'); 
     const [rounds, setRounds] = useState(10);
@@ -141,6 +141,18 @@ function HomePage() {
             });
     };
 
+
+
+    useEffect(() => {
+        // This will scroll the box to the bottom whenever `messages` changes
+        if (boxRef.current) {
+            boxRef.current.scrollTo({
+                top: boxRef.current.scrollHeight,
+                behavior: "smooth" // Adds smooth scrolling to the bottom
+            });
+        }
+    }, [player1History, player2History]);
+
     return (
         <Box className="full-viewport" sx={{height: '100vh'}}>
             <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center'}}>
@@ -258,7 +270,8 @@ function HomePage() {
 
             {/* agent train of thought + decision  */}    
             </Box>
-            <Box 
+            <Box
+            ref={boxRef}
             sx={{
                 display: 'flex',
                 flex: 1,
@@ -273,7 +286,9 @@ function HomePage() {
                 {/* {loading ? (
                     <CircularProgress />
                 ) : ( */}
-                    <Typography variant="body2" sx={{ 
+                    <Typography variant="body2"
+                    ref={boxRef}
+                    sx={{
                         fontSize: '12px',
                         color: 'white',
                         fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
@@ -300,7 +315,9 @@ function HomePage() {
                 {/* {loading ? (
                     <CircularProgress />
                 ) : ( */}
-                    <Typography variant="body2" sx={{ 
+                    <Typography variant="body2"
+                    ref={boxRef}
+                    sx={{
                         fontSize: '12px',
                         color: 'white',
                         fontFamily: 'Monaco, Menlo, Consolas, "Courier New", monospace',
@@ -319,7 +336,8 @@ function HomePage() {
                     </Typography>
                 {/* )} */}
             </Box>
-            <Box sx={{
+            <Box
+            sx={{
                 display: 'flex',
                 flex: 1,
                 flexDirection: 'row',
