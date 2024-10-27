@@ -23,29 +23,6 @@ class PrisonersDilemmaGame(Game):
 
         self.trial_number = len(glob.glob("prisoners_dilemma_scores_*.csv")) + 1
 
-    def game_rules():
-        return f"""You are awating sentencing with your partner. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
-
-                - `round_number`: The current round of the game.
-                - `reward_matrix`: This shows the points outcomes for different choice combinations:
-                    - `both_cooperate`: Points if you and the partner both cooperate. 3 for you, 3 for your partner.
-                    - `both_defect`: Points if you and the partner both defect. 1 for you, 1 for your partner.
-                    - `defect_cooperate`: Points if you defect and the partner cooperates. 0 for you, 5 for your partner.
-                    - `cooperate_defect`: Points if you cooperate and the partner defects. 5 for you, 0 for your partner.
-                - `history`: A list of all the states from the previous rounds.
-
-                Objective: Aim to maximize your own total points by carefully choosing to either "cooperate" or "defect" in each round, using the information provided. Consider the potential behaviors of your partner and how your own actions influence both immediate and future outcomes. You cannot change your decision after it's made, and you will not know the partner's choice until you commit.
-
-                Based on the provided game state, would you like to "cooperate" or "defect"?"""
-
-        start_state = {
-            "round_number": 1,
-            "history": {"player1": [], "player2": []},
-        }
-        super().__init__(rules, start_state, player1, player2, rounds)
-
-        self.trial_number = len(glob.glob("prisoners_dilemma_scores_*.csv")) + 1
-
         #statistical variables
         self.agent_1_nice_propensity = 1
         self.agent_2_nice_propensity = 1
@@ -69,14 +46,31 @@ class PrisonersDilemmaGame(Game):
         self.agent_2_reactions = 0
         self.agent_1_retaliatory = 0
         self.agent_2_retaliatory = 0
-        self.agent_1_occasions_to_provoke = 0
-        self.agent_2_occasions_to_provoke = 0
+        self.agent_1_occasions_to_provoke = 1
+        self.agent_2_occasions_to_provoke = 1
         self.agent_2_troublemaking = 0
         self.agent_1_troublemaking = 0
         self.agent_2_mimicry = 0
         self.agent_1_mimicry = 0
         self.agent_2_mimicry_count = 0
         self.agent_1_mimicry_count = 0
+
+    def game_rules():
+        return f"""You are awating sentencing with your partner. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
+
+                - `round_number`: The current round of the game.
+                - `reward_matrix`: This shows the points outcomes for different choice combinations:
+                    - `both_cooperate`: Points if you and the partner both cooperate. 3 for you, 3 for your partner.
+                    - `both_defect`: Points if you and the partner both defect. 1 for you, 1 for your partner.
+                    - `defect_cooperate`: Points if you defect and the partner cooperates. 0 for you, 5 for your partner.
+                    - `cooperate_defect`: Points if you cooperate and the partner defects. 5 for you, 0 for your partner.
+                - `history`: A list of all the states from the previous rounds.
+
+                Objective: Aim to maximize your own total points by carefully choosing to either "cooperate" or "defect" in each round, using the information provided. Consider the potential behaviors of your partner and how your own actions influence both immediate and future outcomes. You cannot change your decision after it's made, and you will not know the partner's choice until you commit.
+
+                Based on the provided game state, would you like to "cooperate" or "defect"?"""
+
+
 
     def determine_outcome(self, action1: str, action2: str) -> Tuple[str, int, int]:
         if action1 == "cooperate" and action2 == "cooperate":
@@ -92,8 +86,8 @@ class PrisonersDilemmaGame(Game):
                 self.agent_1_forgiven_defection +=1
                 self.agent_1_forgiveness_propensity = self.agent_1_forgiven_defection / (self.agent_2_defection + self.agent_1_penalties)
             
-            self.agent_1_occassions_to_provoke +=1
-            self.agent_2_occassions_to_provoke +=1
+            self.agent_1_occasions_to_provoke +=1
+            self.agent_2_occasions_to_provoke +=1
         elif action1 == "cooperate" and action2 == "defect":
             outcome = f"{self.player1.agent_id} cooperated and {self.player2.agent_id} defected. {self.player1.agent_id} gets 0 points, {self.player2.agent_id} gets 5 points."
             score1, score2 = 0, 5

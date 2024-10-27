@@ -43,43 +43,11 @@ class AIAgent(Agent):
         self.default_tool: Dict[str, Any] = default_tool
 
     def choose_action(self, current_state: str) -> ToolAction:
-
-        messages = [{"role": "user", "parts": str(current_state)}]
-
-        # print(f"messages: {messages}")
-
-        # try:
-            # if (True):
         action: ToolAction = self.model.generate(current_state, self.tools)
         if self.is_valid_action(action.name):
             return action
         else:
             return (self.default_action()["name"], [""])
-        #     else:
-        #         response = self.client.messages.create(
-        #             system=self.rules.format(id=self.agent_id),
-        #             model=self.model,
-        #             messages=messages,
-        #             max_tokens=100,
-        #             tool_choice={"type": "auto"},
-        #             tools=self.tools,
-        #         )
-        #         messages.append(response)
-        #         last_content_block = response.content[-1]
-        #         if last_content_block.type == "text":
-        #             # Fallback if no tool is used
-        #             action: str = last_content_block.text.strip().lower()
-        #             if self.is_valid_action(action):
-        #                 return action
-        #             else:
-        #                 return self.default_action()["name"]
-        #         elif last_content_block.type == "tool_use":
-        #             return last_content_block.name
-        #         else:
-        #             return self.default_action()["name"]
-        # except Exception as e:
-        #     print(f"Error in AI Agent '{self.agent_id}': {e}")
-        #     return self.default_action()["name"]
 
     def is_valid_action(self, action: str) -> bool:
         return action in [tool.name for tool in self.tools]
