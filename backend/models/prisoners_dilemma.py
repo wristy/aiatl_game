@@ -272,4 +272,4 @@ defect_tool: Dict[str, Any] = {
 }
 
 prisoners_dilemma_tools: List[Dict[str, Any]] = [cooperate_tool, defect_tool]
-gemini_prisoners_dilemma_tools: List[Callable[[], None]] = [cooperate, defect]
+# gemini_prisoners_dilemma_tools: List[Callable[[], None]] = [cooperate, defect]

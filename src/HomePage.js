@@ -91,7 +91,7 @@ function HomePage() {
     return (
         <Box className="full-viewport" sx={{height: '100vh'}}>
             <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center'}}>
-            <h1 style={{color: 'white', textAlign: 'left', marginLeft: '10%' }}><code>LLM</code></h1>
+            <h1 style={{color: 'white', textAlign: 'left', marginLeft: '10%' }}><code>AgentArena</code></h1>
             <Box sx={{display: 'flex', flex: 1}}></Box>
             <Button variant="primary" 
                         sx={{

@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 from services.game_service import play_game
 from models.agents import AIAgent
 from models.prisoners_dilemma import PrisonersDilemmaGame, prisoners_dilemma_tools
+import json
 
 game_bp = Blueprint('game_bp', __name__)
 models = {"haiku": "claude-3-haiku-20240307", "sonnet": "claude-3-5-sonnet-latest"}
@@ -50,9 +51,31 @@ def play():
 
 @game_bp.route('/data_request', methods=['GET'])
 def send():
-    response = []
+    # response = []
     if game is not None:
-        return jsonify({"history": "history:" + game.game_state.get_history()}), 200
+        history = game.game_state.get_history()
+        current_state = {
+            "round_number": game.game_state.current_state["round_number"],
+            "history": history,
+            "agent1_mimicry": game.agent_1_mimicry,
+            "agent2_mimicry": game.agent_2_mimicry,
+            "agent1_troublemaking": game.agent_1_troublemaking,
+            "agent2_troublemaking": game.agent_2_troublemaking,
+            "agent1_niceness": game.agent_1_nice_propensity,
+            "agent2_niceness": game.agent_2_nice_propensity,
+            "agent1_forgiveness": game.agent_1_forgiveness_propensity,
+            "agent2_forgiveness": game.agent_2_forgiveness_propensity,
+            "agent1_retaliation": game.agent_1_retaliatory,
+            "agent2_retaliation": game.agent_2_retaliatory
+        }
+        # agent_decisions = game.agent_decisions 
+        
+        response = {
+            "history": json.dumps(history),
+            "current_state": current_state
+            # "agentDecisions": agent_decisions
+        }
+        return jsonify(response), 200
     # parse json
     else:
         print("Game is None")
