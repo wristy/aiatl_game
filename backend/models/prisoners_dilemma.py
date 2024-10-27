@@ -4,6 +4,8 @@ from typing import Tuple, List, Dict, Any
 from .game import Game
 from .agents import Agent
 import glob
+from google.generativeai.types import FunctionDeclaration
+from .models import Tool, ToolParameter
 
 
 class PrisonersDilemmaGame(Game):
@@ -11,9 +13,18 @@ class PrisonersDilemmaGame(Game):
         self,
         player1: Agent,
         player2: Agent,
-        rounds: int = 10,
+        rounds: int = 20,
     ):
-        rules = f"""You are {player1.agent_id} (Player 1) awating sentencing with your partner {player2.agent_id}. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
+        start_state = {
+            "round_number": 1,
+            "history": {"player1": [], "player2": []},
+        }
+        super().__init__(start_state, player1, player2, rounds)
+
+        self.trial_number = len(glob.glob("prisoners_dilemma_scores_*.csv")) + 1
+
+    def game_rules():
+        return f"""You are awating sentencing with your partner. You and your partner are in seperate rooms (i.e., you cannot see your partner's reaction or communicate with them until after sentencing). You are called into a room, where you are asked about your involvement with the crime alleged. You face a decision to either "cooperate" (stay silent) or "defect" (testify against your partner). You cannot communicate directly with the other prisoner and must make your choice based on limited information about their behavior and your own sentence outcomes.
 
                 - `round_number`: The current round of the game. If this is a single-round game, `round_number` is set to 1. In an iterated game, this increments with each new round.
                 - `reward_matrix`: This shows the points outcomes for different choice combinations:
@@ -26,15 +37,7 @@ class PrisonersDilemmaGame(Game):
                 Objective: Aim to maximize your own total points by carefully choosing to either "cooperate" or "defect" in each round, using the information provided. Consider the potential behaviors of your partner and how your own actions influence both immediate and future outcomes. You cannot change your decision after it's made, and you will not know the partner's choice until you commit.
 
                 Based on the provided game state, would you like to "cooperate" or "defect"?"""
-
-        start_state = {
-            "round_number": 1,
-            "history": {"player1": [], "player2": []},
-        }
-        super().__init__(rules, start_state, player1, player2, rounds)
-
-        self.trial_number = len(glob.glob("prisoners_dilemma_scores_*.csv")) + 1
-
+    
     def determine_outcome(self, action1: str, action2: str) -> Tuple[str, int, int]:
         if action1 == "cooperate" and action2 == "cooperate":
             outcome = "Both players cooperated. Both receive 3 points."
@@ -92,22 +95,35 @@ class PrisonersDilemmaGame(Game):
 def cooperate() -> None:
     print("Player chooses to cooperate.")
 
-
-cooperate_tool: Dict[str, Any] = {
-    "name": "cooperate",
-    "description": "Choose to cooperate with the other player.",
-    "input_schema": {"type": "object", "properties": {}, "required": []},
-}
-
-
 def defect() -> None:
     print("Player chooses to defect.")
 
 
-defect_tool: Dict[str, Any] = {
-    "name": "defect",
-    "description": "Choose to defect against the other player.",
-    "input_schema": {"type": "object", "properties": {}, "required": []},
-}
+reasoning_parameter_cooperate = ToolParameter(
+    name="reasoning",
+    type="STRING",
+    description="A paragraph (at least a few sentences) stating the entire thought process behind why you chose to cooperate"
+)
 
-prisoners_dilemma_tools: List[Dict[str, Any]] = [cooperate_tool, defect_tool]
+reasoning_parameter_defect = ToolParameter(
+    name="reasoning",
+    type="STRING",
+    description="A paragraph (at least a few sentences) stating the entire thought process behind why you chose to defect"
+)
+
+# Creating the Tool instances
+cooperate_tool = Tool(
+    name="cooperate",
+    description="Choose to cooperate with the other player.",
+    parameters=[reasoning_parameter_cooperate]
+)
+
+defect_tool = Tool(
+    name="defect",
+    description="Choose to defect against the other player.",
+    parameters=[reasoning_parameter_defect]
+)
+
+
+
+prisoners_dilemma_tools: List[Tool] = [cooperate_tool, defect_tool]
