@@ -1,15 +1,26 @@
 import { React, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Select, Box, MenuItem, Typography, TextField, Button, IconButton } from "@mui/material";
+import { Select, Box, MenuItem, Typography, TextField, Button } from "@mui/material";
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import { styled } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import './App.css';
-import axios from 'axios';
-
 
 function HomePage() {
+    const [metrics, setMetrics] = useState({
+        niceness1: [],
+        forgiveness1: [],
+        retaliatory1: [],
+        troublemaking1: [],
+        emulative1: [],
+        niceness2: [],
+        forgiveness2: [],
+        retaliatory2: [],
+        troublemaking2: [],
+        emulative2: []
+    });
+
     const WhiteArrowDropDownIcon = styled(ArrowDropDownIcon)({
         color: 'white',
     });
@@ -29,14 +40,18 @@ function HomePage() {
       
     const [player1History, setPlayer1History] = useState([]);
     const [player2History, setPlayer2History] = useState([]);
-    const [loading, setLoading] = useState(true);
 
     const [error, setError] = useState(false);
 
     const navigate = useNavigate();
     const handleResultsClick = () => {
         setGameInitialized(false);
-        navigate('/results');
+        console.log("game_initialize:" + gameInitialized);
+        const queryParams = new URLSearchParams();
+        Object.keys(metrics).forEach(key => {
+            queryParams.append(key, JSON.stringify(metrics[key]));
+        });
+        navigate(`/results?${queryParams.toString()}`);
     };
 
     useEffect(() => {
@@ -48,14 +63,21 @@ function HomePage() {
                     method: 'GET',}
                 );
                 const data = await response.json();
-                if ("error" in data) {
-                    return;
+                if (response.ok) {
+                    setMetrics(prevMetrics => ({
+                        ...prevMetrics,
+                        niceness1: [...prevMetrics.niceness1, data.agent1_niceness],
+                        forgiveness1: [...prevMetrics.forgiveness1, data.agent1_forgiveness],
+                        retaliatory1: [...prevMetrics.retaliatory1, data.agent1_retaliation],
+                        troublemaking1: [...prevMetrics.troublemaking1, data.agent1_troublemaking],
+                        emulative1: [...prevMetrics.emulative1, data.agent1_mimicry],
+                    }));
+                } else {
+                    console.error('Error fetching data:', data.error);
                 }
                 setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1: " + (JSON.parse(data["history"]).player1).at(-1));
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -77,19 +99,29 @@ function HomePage() {
                     method: 'GET',}
                 );
                 const data = await response.json();
-                if ("error" in data) {
-                    return;
+                if (response.ok) {
+                    setMetrics(prevMetrics => ({
+                        ...prevMetrics,
+                        niceness2: [...prevMetrics.niceness2, data.agent2_niceness],
+                        forgiveness2: [...prevMetrics.forgiveness2, data.agent2_forgiveness],
+                        retaliatory2: [...prevMetrics.retaliatory2, data.agent2_retaliation],
+                        troublemaking2: [...prevMetrics.troublemaking2, data.agent2_troublemaking],
+                        emulative2: [...prevMetrics.emulative2, data.agent2_mimicry],
+                    }));
+                } else {
+                    console.error('Error fetching data:', data.error);
                 }
                 setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2: " + (JSON.parse(data["history"]).player2).at(-1));
             } catch (error) {
                 console.error('Error fetching player1 history:', error);
-            } finally {
-                setLoading(false);
             }
         };
 
         fetchPlayer2History(); // Initial fetch
-        const intervalId = setInterval(fetchPlayer2History, 10000); // Fetch every 10 seconds
+        let intervalId;
+        if (gameInitialized) {
+            intervalId = setInterval(fetchPlayer2History, 10000); // Fetch every 10 seconds
+        }
 
         // Cleanup function to clear the interval
         return () => {
@@ -266,9 +298,6 @@ function HomePage() {
                 mx: '10%',
                 my: '1%'
             }}>
-                {/* {loading ? (
-                    <CircularProgress />
-                ) : ( */}
                     <Typography variant="body2" sx={{ 
                         fontSize: '12px',
                         color: 'white',
@@ -286,16 +315,12 @@ function HomePage() {
                     }}>
                     {player1History}
                     </Typography>
-                {/* )} */}
                 <Box
                     sx={{display: 'flex',
                         flex: '1',
                     flexDirection: 'row',
                     }}
                 ></Box>
-                {/* {loading ? (
-                    <CircularProgress />
-                ) : ( */}
                     <Typography variant="body2" sx={{ 
                         fontSize: '12px',
                         color: 'white',
@@ -313,7 +338,6 @@ function HomePage() {
                     }}>
                     {player2History} 
                     </Typography>
-                {/* )} */}
             </Box>
             <Box sx={{
                 display: 'flex',

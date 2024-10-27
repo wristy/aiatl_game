@@ -82,7 +82,7 @@ def send():
         #     # "agentDecisions": agent_decisions
         # }
         
-        print(f"History from GameState: {history}")
+        # print(f"History from GameState: {history}")
         return jsonify(current_state), 200
     # parse json
     else:
