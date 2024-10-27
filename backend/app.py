@@ -11,8 +11,6 @@ from models.models import GeminiModel, AnthropicModel
 app = Flask(__name__)
 CORS(app)
 
-API_KEY = os.getenv("ANTHROPIC_API_KEY")
-
 # client = anthropic.Client(api_key=API_KEY)
 
 # Register Blueprints
@@ -43,7 +41,7 @@ if __name__ == "__main__":
     game = PrisonersDilemmaGame(
         player1=ai_agent,
         player2=always_defect_agent,
-        rounds=1,
+        rounds=5,
     )
 
     game.play()

@@ -61,7 +61,6 @@ class PrisonersDilemmaGame(Game):
         self.game_state.current_state["round_number"] += 1
 
         current_history = self.game_state.get_history()
-        print(current_history)
 
         current_history["player1"].append(action1)
         current_history["player2"].append(action2)
