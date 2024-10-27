@@ -80,8 +80,8 @@ class PrisonersDilemmaGame(Game):
                 self.agent_1_forgiven_defection +=1
                 self.agent_1_forgiveness_propensity = self.agent_1_forgiven_defection / (self.agent_2_defection + self.agent_1_penalties)
             
-            self.agent_1_occassions_to_provoke +=1
-            self.agent_2_occassions_to_provoke +=1
+            self.agent_1_occasions_to_provoke +=1
+            self.agent_2_occasions_to_provoke +=1
         elif action1 == "cooperate" and action2 == "defect":
             outcome = f"{self.player1.agent_id} cooperated and {self.player2.agent_id} defected. {self.player1.agent_id} gets 0 points, {self.player2.agent_id} gets 5 points."
             score1, score2 = 0, 5
@@ -211,10 +211,13 @@ class PrisonersDilemmaGame(Game):
         #mimicry_propensity
         if (action1 == self.agent_2_last_action):
             self.agent_1_mimicry_count +=1
-            self.agent_1_mimicry = self.agent_1_mimicry / (self.trial_number - 1)
+            self.agent_1_mimicry = self.agent_1_mimicry_count / (self.trial_number - 1)
         if (action2 == self.agent_1_last_action):
             self.agent_2_mimicry_count +=1 
-            self.agent_2_mimicry = self.agent_2_mimicry / (self.trial_number - 1)
+            self.agent_2_mimicry = self.agent_2_mimicry_count / (self.trial_number - 1)
+        
+        self.agent_1_last_action = action1
+        self.agent_2_last_action = action2
 
         current_state = {
             "round_number": self.game_state.current_state["round_number"],

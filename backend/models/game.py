@@ -1,7 +1,9 @@
+import time
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import List, Tuple, Dict, Any
 from .agents import AIAgent, Agent, RandomAgent
+from collections import deque
 
 class GameState:
     def __init__(self, current_state: Dict[str, Any]) -> None:
@@ -88,6 +90,8 @@ class Game(ABC):
     #     pass
 
     def play(self) -> None:
+        player1_queue = deque(["cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate", "cooperate"])
+        player2_queue = deque(["cooperate", "cooperate", "cooperate", "cooperate", "defect","defect", "cooperate", "cooperate", "defect", "defect"])
         for round_num in range(1, self.rounds + 1):
             print(f"\n=== Round {round_num} ===")
 
@@ -95,8 +99,11 @@ class Game(ABC):
             # history = self.game_state.get_history()
 
             # Get actions from both players
-            action1 = self.player1.choose_action(self.game_state.current_state)
-            action2 = self.player2.choose_action(self.game_state.current_state)
+            # action1 = self.player1.choose_action(self.game_state.get_history())
+            # action2 = self.player2.choose_action(self.game_state.get_history())
+
+            action1 = player1_queue.popleft()
+            action2 = player2_queue.popleft()
 
             print(f"{self.player1.agent_id} chooses to {action1}.")
             print(f"{self.player2.agent_id} chooses to {action2}.")
@@ -105,10 +112,9 @@ class Game(ABC):
             new_state = self.determine_outcome(action1, action2)
             print(f"Outcome: {new_state}")
 
-
             # Record the game
             self.game_state.record_game(new_state)
-
+            time.sleep(10)
         # Final Report
         print("\n=== Game Over ===")
         self.report_scores()
