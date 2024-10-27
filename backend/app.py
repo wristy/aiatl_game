@@ -9,8 +9,8 @@ from models.agents import AIAgent, RandomAgent, TitForTatAgent, SuspiciousTitFor
 import google.generativeai as genai
 
 app = Flask(__name__)
-app.register_blueprint(game_bp)
 CORS(app)
+app.register_blueprint(game_bp)
 
 API_KEY = os.getenv("ANTHROPIC_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
