@@ -216,10 +216,13 @@ class PrisonersDilemmaGame(Game):
         #mimicry_propensity
         if (action1 == self.agent_2_last_action):
             self.agent_1_mimicry_count +=1
-            self.agent_1_mimicry = self.agent_1_mimicry / (self.trial_number - 1)
+            self.agent_1_mimicry = self.agent_1_mimicry_count / (self.trial_number - 1)
         if (action2 == self.agent_1_last_action):
             self.agent_2_mimicry_count +=1 
-            self.agent_2_mimicry = self.agent_2_mimicry / (self.trial_number - 1)
+            self.agent_2_mimicry = self.agent_2_mimicry_count / (self.trial_number - 1)
+
+        self.agent_1_last_action = action1
+        self.agent_2_last_action = action2
 
         current_state = {
             "round_number": self.game_state.current_state["round_number"],

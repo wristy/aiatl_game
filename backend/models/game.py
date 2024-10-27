@@ -1,8 +1,11 @@
+import time
 from abc import ABC, abstractmethod
 from datetime import date
 from typing import List, Tuple, Dict, Any
 from .agents import AIAgent, Agent, RandomAgent
 from .models import ToolAction
+from collections import deque
+import json
 
 class GameState:
     def __init__(self, current_state: Dict[str, Any]) -> None:
@@ -10,6 +13,8 @@ class GameState:
         self.current_state: Dict[str, Any] = current_state
 
     def record_game(self, new_state) -> None:
+        self.history['player1'].append(new_state['history']['player1'])
+        self.history['player2'].append(new_state['history']['player2'])
         self.current_state = new_state
 
     def get_history(self) -> Dict[str, List[str]]:
@@ -58,10 +63,9 @@ class Game(ABC):
             new_state = self.determine_outcome(a1.name, a2.name)
             print(f"Outcome: {new_state}")
 
-
             # Record the game
             self.game_state.record_game(new_state)
-
+            time.sleep(10)
         # Final Report
         print("\n=== Game Over ===")
         self.report_scores()

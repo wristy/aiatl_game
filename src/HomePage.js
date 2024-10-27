@@ -1,23 +1,34 @@
 import { React, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Select, Box, MenuItem, Typography, CircularProgress, TextField, Button } from "@mui/material";
+import { Select, Box, MenuItem, Typography, TextField, Button, IconButton } from "@mui/material";
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
+import { styled } from '@mui/material/styles';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import './App.css';
 import axios from 'axios';
-// import { Box } from "@mui/material/Box";
+
 
 function HomePage() {
-    const [agent1, setAgent1] = useState('Sonnet');
-    const [agent2, setAgent2] = useState('Sonnet'); 
-    const [rounds, setRounds] = useState(50);
+    const WhiteArrowDropDownIcon = styled(ArrowDropDownIcon)({
+        color: 'white',
+    });
+
+    const url = 'http://localhost:5000';
+    const [gameInitialized, setGameInitialized] = useState(false);
+
+    const [agent1, setAgent1] = useState('sonnet');
+    const [agent2, setAgent2] = useState('haiku'); 
+    const [rounds, setRounds] = useState(10);
 
     const options = [
-        { value: "Sonnet", label: "Sonnet" },
-        { value: "Haiku", label: "Haiku" },
-        { value: "Gemini", label: "Gemini" },
+        { value: "sonnet", label: "Sonnet" },
+        { value: "haiku", label: "Haiku" },
+        { value: "gemini", label: "Gemini" },
     ];
       
-    const [text, setText] = useState('');
+    const [player1History, setPlayer1History] = useState([]);
+    const [player2History, setPlayer2History] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const [error, setError] = useState(false);
@@ -28,21 +39,67 @@ function HomePage() {
     };
 
     useEffect(() => {
-        const fetchText = async () => {
+        if (!gameInitialized) return;
+
+        const fetchPlayer1History = async () => {
             try {
-                const response = await fetch(``); // api call
+                const response = await fetch(`${url}/data_request`,{
+                    method: 'GET',}
+                );
                 const data = await response.json();
-                setText(data.text);
+                if ("error" in data) {
+                    return;
+                }
+                // console.log(data);
+                const json_data = JSON.parse(data['history']);
+                setPlayer1History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 1: " + JSON.parse(data['history']));
             } catch (error) {
-                console.error('Error fetching text:', error);
-                setText('Failed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load textFailed to load text');
+                console.error('Error fetching player1 history:', error);
             } finally {
                 setLoading(false);
             }
         };
-    
-        fetchText();
-    }, []);
+
+        fetchPlayer1History(); // Initial fetch
+        const intervalId = setInterval(fetchPlayer1History, 10000); // Fetch every 10 seconds
+
+        // Cleanup function to clear the interval
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [gameInitialized]);
+
+    useEffect(() => {
+        if (!gameInitialized) return;
+
+        const fetchPlayer2History = async () => {
+            try {
+                const response = await fetch(`${url}/data_request`,{
+                    method: 'GET',}
+                );
+                const data = await response.json();
+                if ("error" in data) {
+                    return;
+                }
+                // console.log(data);
+                // console.log(JSON.parse(data['history']));
+                console.log(JSON.parse(data['history']));
+                // setPlayer2History(prevHistory => prevHistory + "\n----------------------------------\n" + "Player 2:" + JSON.parse("'" + data['history'].replace(/'/g, '"').slice(1, -1) + "'"));
+            } catch (error) {
+                console.error('Error fetching player1 history:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPlayer2History(); // Initial fetch
+        const intervalId = setInterval(fetchPlayer2History, 10000); // Fetch every 10 seconds
+
+        // Cleanup function to clear the interval
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [gameInitialized]);
 
     const handleAgent1Change = (event) => {
         setAgent1(event.target.value);
@@ -62,11 +119,7 @@ function HomePage() {
         } else {
           setError(true); // Set error state if the input is not an integer
         }
-      };
-
-    // const onAgentChange = (value) => {
-    //     console.log(value);
-    // };
+    };
 
     const onPlay = () => {
         const data = {
@@ -75,10 +128,14 @@ function HomePage() {
             rounds: rounds,
         };
 
-        axios.post(``, data)
-            .then(response => {
-                console.log('Data submitted successfully:', response.data);
-            })
+        setGameInitialized(true);
+        fetch(`${url}/play`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
             .catch(error => {
                 console.error('Error submitting data:', error);
             });
@@ -86,7 +143,20 @@ function HomePage() {
 
     return (
         <Box className="full-viewport" sx={{height: '100vh'}}>
-            <h1 style={{color: 'white', textAlign: 'left', marginLeft: '10%' }}><code>LLM</code></h1>
+            <Box sx={{display: 'flex', flexDirection: 'row', justifyContent: 'flex-start', alignItems: 'center'}}>
+            <h1 style={{color: 'white', textAlign: 'left', marginLeft: '10%' }}><code>AgentArena</code></h1>
+            <Box sx={{display: 'flex', flex: 1}}></Box>
+            <Button variant="primary" 
+                        sx={{
+                            backgroundColor: '#00FF81',
+                            // maxWidth: '10px',
+                            height: '100%',
+                            marginRight: '10%'}}
+                        onClick={onPlay}
+            >
+                <PlayArrowIcon />
+            </Button>
+            </Box>
             {/* select models and no. of rounds */ }
             <Box 
             sx={{
@@ -101,6 +171,7 @@ function HomePage() {
                     defaultValue={agent1}
                     onChange={handleAgent1Change} 
                     displayEmpty
+                    IconComponent={WhiteArrowDropDownIcon}
                     sx = {{color: 'white',
                            backgroundColor: '#2b2340',
                         //    outlineColor: 'white'
@@ -173,6 +244,7 @@ function HomePage() {
                     defaultValue={agent2} 
                     onChange={handleAgent2Change} 
                     displayEmpty
+                    IconComponent={WhiteArrowDropDownIcon}
                     sx = {{color: 'white',
                            backgroundColor: '#2b2340'
                     }}
@@ -198,9 +270,9 @@ function HomePage() {
                 mx: '10%',
                 my: '1%'
             }}>
-                {loading ? (
+                {/* {loading ? (
                     <CircularProgress />
-                ) : (
+                ) : ( */}
                     <Typography variant="body2" sx={{ 
                         fontSize: '12px',
                         color: 'white',
@@ -216,18 +288,18 @@ function HomePage() {
                         overflowX: 'hidden',      // Hides horizontal overflow if text wraps
                         whiteSpace: 'pre-wrap',
                     }}>
-                    {text}
+                    {player1History}
                     </Typography>
-                )}
+                {/* )} */}
                 <Box
                     sx={{display: 'flex',
                         flex: '1',
                     flexDirection: 'row',
                     }}
                 ></Box>
-                {loading ? (
+                {/* {loading ? (
                     <CircularProgress />
-                ) : (
+                ) : ( */}
                     <Typography variant="body2" sx={{ 
                         fontSize: '12px',
                         color: 'white',
@@ -243,9 +315,9 @@ function HomePage() {
                         overflowX: 'hidden',      // Hides horizontal overflow if text wraps
                         whiteSpace: 'pre-wrap',
                     }}>
-                    {text}
+                    {player2History} 
                     </Typography>
-                )}
+                {/* )} */}
             </Box>
             <Box sx={{
                 display: 'flex',
